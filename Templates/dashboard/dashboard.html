@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoalBuddy – Student Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sora: ['Sora','sans-serif'], dm: ['DM Sans','sans-serif'] },
+          colors: {
+            brand: { 50:'#eef2ff', 100:'#e0e7ff', 200:'#c7d2fe', 300:'#a5b4fc', 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 800:'#3730a3', 900:'#312e81' },
+            accent: { 400:'#c084fc', 500:'#a855f7', 600:'#9333ea' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; }
+    h1,h2,h3,h4,h5 { font-family: 'Sora', sans-serif; }
+
+    .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.13) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.10) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.07) 0%, transparent 60%);
+    }
+    .dark .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.22) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.17) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.12) 0%, transparent 60%);
+    }
+
+    /* ── SIDEBAR: light vs dark background — NO backdrop-filter on sidebar ── */
+    #sidebar {
+      transition: transform 0.3s ease;
+      background: #ffffff;
+    }
+    .dark #sidebar {
+      background: #0a0919 !important;
+    }
+
+    /* ── HEADER: light vs dark ── */
+    header.top-header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .dark header.top-header {
+      background: rgba(10, 9, 25, 0.97) !important;
+    }
+
+    .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .feature-card { background: rgba(255,255,255,0.75); border: 1px solid rgba(99,102,241,0.12); }
+    .dark .feature-card { background: rgba(30,27,75,0.60); border-color: rgba(99,102,241,0.25); }
+    .stat-card { background: rgba(255,255,255,0.80); border: 1px solid rgba(99,102,241,0.10); }
+    .dark .stat-card { background: rgba(30,27,75,0.55); border-color: rgba(99,102,241,0.22); }
+
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7); transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.50); }
+    .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.10), rgba(168,85,247,0.10)); border: 1px solid rgba(99,102,241,0.22); }
+    .dark .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(168,85,247,0.18)); border-color: rgba(99,102,241,0.38); }
+
+    #sidebar.sidebar-hidden { transform: translateX(-100%); }
+    .nav-item { transition: all 0.2s; }
+    .nav-item:hover { background: rgba(99,102,241,0.10); }
+    .nav-item.active { background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(168,85,247,0.14)); border-left: 3px solid #6366f1; }
+    .dark .nav-item:hover { background: rgba(99,102,241,0.18); }
+    .dark .nav-item.active { background: linear-gradient(135deg, rgba(99,102,241,0.30), rgba(168,85,247,0.22)); }
+
+    .progress-track { background: rgba(99,102,241,0.12); border-radius: 99px; overflow: hidden; }
+    .dark .progress-track { background: rgba(99,102,241,0.20); }
+    .progress-fill { background: linear-gradient(90deg, #6366f1, #a855f7); border-radius: 99px; transition: width 1.2s ease; }
+    .progress-fill.green { background: linear-gradient(90deg, #10b981, #34d399); }
+    .progress-fill.amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .progress-fill.red { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+    .ring-chart { transform: rotate(-90deg); }
+    .ring-bg { stroke: rgba(99,102,241,0.15); }
+    .dark .ring-bg { stroke: rgba(99,102,241,0.25); }
+
+    @keyframes flicker { 0%,100%{transform:scale(1) rotate(-2deg)} 50%{transform:scale(1.12) rotate(2deg)} }
+    .flame { animation: flicker 1.4s ease-in-out infinite; display:inline-block; }
+
+    .card-hover { transition: transform 0.28s ease, box-shadow 0.28s ease; }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(99,102,241,0.18); }
+    .dark .card-hover:hover { box-shadow: 0 12px 40px rgba(99,102,241,0.30); }
+
+    .pulse-dot { animation: pulseDot 2s ease-in-out infinite; }
+    @keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.85)} }
+
+    ::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:linear-gradient(#6366f1,#a855f7);border-radius:99px}
+
+    .notif-badge { background: linear-gradient(135deg,#ef4444,#f87171); }
+    .timeline-dot { background: linear-gradient(135deg,#6366f1,#a855f7); }
+    .timeline-line { background: linear-gradient(180deg,#6366f1,#a855f7,rgba(99,102,241,0.1)); }
+
+    #sidebarOverlay { display:none; }
+    #sidebarOverlay.active { display:block; }
+
+    @media(min-width:1024px){ #sidebar{ transform:translateX(0)!important; } #sidebarOverlay{ display:none!important; } }
+
+    .bar-wrap { display:flex; align-items:flex-end; gap:6px; height:80px; }
+    .bar { border-radius:6px 6px 0 0; transition: height 0.8s ease; min-width:18px; }
+
+    .ring-score { stroke: url(#scoreGrad); }
+    .tab-btn.active-tab { background: linear-gradient(135deg,#6366f1,#a855f7); color:#fff; box-shadow:0 4px 14px rgba(99,102,241,0.35); }
+
+    #moonIconSide, #sunIconSide { display: none; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0a0919] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+
+<div class="flex min-h-screen">
+
+  <!-- ─────────────── SIDEBAR ─────────────── -->
+  <aside id="sidebar" class="sidebar-hidden lg:translate-x-0 fixed top-0 left-0 h-full w-64 z-40 border-r border-slate-200/60 dark:border-white/10 flex flex-col">
+    <!-- Logo -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200/50 dark:border-white/10">
+      <a href="{% url 'home' %}" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="font-sora font-bold text-xl gradient-text">GoalBuddy</span>
+      </a>
+      <button id="closeSidebar" class="lg:hidden w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- User mini profile -->
+    <div class="px-4 py-4 border-b border-slate-200/40 dark:border-white/8">
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-base font-sora">R</div>
+          <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white dark:border-[#0a0919]"></span>
+        </div>
+        <div class="overflow-hidden">
+          <p class="font-sora font-semibold text-sm truncate">Rahul Sharma</p>
+          <div class="flex items-center gap-1.5">
+            <span class="tag-badge text-xs px-2 py-0.5 rounded-full text-brand-600 dark:text-brand-300 font-medium">🎯 NEET</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">2026</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-slate-500 dark:text-slate-400">Level 12 · Explorer</span>
+          <span class="text-xs font-medium text-brand-600 dark:text-brand-300">2,840 XP</span>
+        </div>
+        <div class="progress-track h-1.5">
+          <div class="progress-fill h-1.5" style="width:68%"></div>
+        </div>
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">460 XP to Level 13</p>
+      </div>
+    </div>
+
+    <!-- Nav links -->
+    <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-2">Main</p>
+      <a href="#" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-600 dark:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h7v7H3zM3 16h7v4H3zM14 3h7v5h-7zM14 11h7v10h-7z"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        My Roadmap
+      </a>
+      <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        My Progress
+      </a>
+      <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        AI Mentor
+        <span class="ml-auto w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+      </a>
+      <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        Mock Interview
+      </a>
+
+      <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mt-5 mb-2">Progress</p>
+      <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Analytics
+      </a>
+      <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Parent View
+      </a>
+    </nav>
+
+    <!-- Bottom settings -->
+    <div class="px-3 py-4 border-t border-slate-200/50 dark:border-white/10 space-y-1">
+      <button id="themeToggleSide" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg id="moonIconSide" class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <svg id="sunIconSide" class="w-4 h-4 flex-shrink-0 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <span id="themeLabel">Dark Mode</span>
+      </button>
+      <a href="{% url 'home' %}" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Home
+      </a>
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden" onclick="closeSidebarFn()"></div>
+
+  <!-- ─────────────── MAIN CONTENT ─────────────── -->
+  <div class="flex-1 lg:ml-64 flex flex-col min-h-screen">
+
+    <!-- ── TOP NAV ── -->
+    <header class="top-header sticky top-0 z-20 border-b border-slate-200/50 dark:border-white/10">
+      <div class="flex items-center justify-between px-4 sm:px-6 h-16 gap-3">
+        <button id="openSidebar" class="lg:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-slate-700 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="hidden sm:block">
+          <h2 class="font-sora font-bold text-lg text-slate-800 dark:text-white">Dashboard</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Tuesday, March 24, 2026</p>
+        </div>
+        <div class="flex-1 max-w-xs mx-auto sm:mx-0">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search topics, chapters..." class="w-full pl-9 pr-4 py-2 text-sm rounded-xl bg-slate-100 dark:bg-white/10 border border-transparent focus:border-brand-400 dark:focus:border-brand-500 focus:outline-none focus:ring-0 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"/>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="relative w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/20 transition-colors">
+            <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full notif-badge"></span>
+          </button>
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-sm font-sora cursor-pointer">R</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── MAIN SCROLL AREA ── -->
+    <main class="flex-1 mesh-bg overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
+
+      <!-- WELCOME BANNER -->
+      <div class="feature-card glass card-hover rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-2xl font-sora flex-shrink-0">R</div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="font-sora font-bold text-xl">Good morning, Rahul! 👋</h1>
+              <span class="tag-badge text-xs px-2.5 py-1 rounded-full text-brand-600 dark:text-brand-300 font-semibold">🔥 <span class="flame">24</span> Day Streak</span>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">You're 68% closer to your NEET 2026 goal. Stay consistent! 💪</p>
+          </div>
+        </div>
+        <a href="#" class="btn-primary text-white text-sm font-semibold px-5 py-2.5 rounded-2xl inline-flex items-center gap-2 flex-shrink-0">
+          Continue Today's Plan
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        </a>
+      </div>
+
+      <!-- STAT CARDS ROW -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stat-card glass card-hover rounded-3xl p-5 col-span-2 sm:col-span-1">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Career Score</p>
+            <div class="w-8 h-8 rounded-xl bg-brand-100 dark:bg-brand-900/40 flex items-center justify-center">
+              <svg class="w-4 h-4 text-brand-600 dark:text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+          </div>
+          <div class="flex items-end gap-2">
+            <span class="font-sora font-extrabold text-3xl gradient-text">72%</span>
+            <span class="text-xs text-emerald-500 font-semibold mb-1.5">▲ +4%</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">NEET Success Probability</p>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill h-1.5" style="width:72%"></div></div>
+        </div>
+        <div class="stat-card glass card-hover rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Today</p>
+            <div class="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+              <svg class="w-4 h-4 text-violet-600 dark:text-violet-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <span class="font-sora font-extrabold text-3xl text-violet-600 dark:text-violet-300">3h 20m</span>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Study Time</p>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill h-1.5" style="width:55%; background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div>
+        </div>
+        <div class="stat-card glass card-hover rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">XP Points</p>
+            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+              <svg class="w-4 h-4 text-amber-600 dark:text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            </div>
+          </div>
+          <span class="font-sora font-extrabold text-3xl text-amber-600 dark:text-amber-300">2,840</span>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Level 12 · Explorer</p>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill amber h-1.5" style="width:68%"></div></div>
+        </div>
+        <div class="stat-card glass card-hover rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">India Rank</p>
+            <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+              <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+            </div>
+          </div>
+          <span class="font-sora font-extrabold text-3xl text-emerald-600 dark:text-emerald-300">#1,204</span>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Top 3% of NEET students</p>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill green h-1.5" style="width:80%"></div></div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Subject Progress + Weekly Chart -->
+      <div class="grid lg:grid-cols-3 gap-5">
+        <div class="feature-card glass rounded-3xl p-6 lg:col-span-2">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="font-sora font-semibold text-base">Subject Mastery</h3>
+            <div class="flex gap-1.5">
+              <button class="tab-btn active-tab text-xs font-semibold px-3 py-1.5 rounded-xl transition-all">This Week</button>
+              <button class="tab-btn text-xs font-semibold px-3 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Month</button>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span><span class="text-sm font-medium">Biology</span></div>
+                <div class="flex items-center gap-3"><span class="text-xs text-slate-500 dark:text-slate-400">Ch 18/24</span><span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">82%</span></div>
+              </div>
+              <div class="progress-track h-2.5"><div class="progress-fill green h-2.5" style="width:82%"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-brand-500 flex-shrink-0"></span><span class="text-sm font-medium">Physics</span></div>
+                <div class="flex items-center gap-3"><span class="text-xs text-slate-500 dark:text-slate-400">Ch 12/20</span><span class="text-sm font-bold text-brand-600 dark:text-brand-400">60%</span></div>
+              </div>
+              <div class="progress-track h-2.5"><div class="progress-fill h-2.5" style="width:60%"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-violet-500 flex-shrink-0"></span><span class="text-sm font-medium">Chemistry</span></div>
+                <div class="flex items-center gap-3"><span class="text-xs text-slate-500 dark:text-slate-400">Ch 10/19</span><span class="text-sm font-bold text-violet-600 dark:text-violet-400">53%</span></div>
+              </div>
+              <div class="progress-track h-2.5"><div class="progress-fill h-2.5" style="width:53%; background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 flex-shrink-0"></span><span class="text-sm font-medium">Botany</span></div>
+                <div class="flex items-center gap-3"><span class="text-xs text-slate-500 dark:text-slate-400">Ch 7/14</span><span class="text-sm font-bold text-amber-600 dark:text-amber-400">50%</span></div>
+              </div>
+              <div class="progress-track h-2.5"><div class="progress-fill amber h-2.5" style="width:50%"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 flex-shrink-0"></span><span class="text-sm font-medium">Zoology</span></div>
+                <div class="flex items-center gap-3"><span class="text-xs text-slate-500 dark:text-slate-400">Ch 4/12</span><span class="text-sm font-bold text-rose-600 dark:text-rose-400">33%</span></div>
+              </div>
+              <div class="progress-track h-2.5"><div class="progress-fill red h-2.5" style="width:33%"></div></div>
+            </div>
+          </div>
+          <div class="mt-5 p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200/60 dark:border-rose-700/40 flex items-start gap-3">
+            <span class="text-lg flex-shrink-0 mt-0.5">🤖</span>
+            <div>
+              <p class="text-xs font-semibold text-rose-700 dark:text-rose-300">AI Mentor Alert</p>
+              <p class="text-xs text-rose-600 dark:text-rose-400 mt-0.5">Zoology is your weakest area. Spend at least <strong>45 min today</strong> on Chapter 5: Animal Tissues to stay on track.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card glass rounded-3xl p-6 flex flex-col">
+          <h3 class="font-sora font-semibold text-base mb-1">This Week</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Daily study hours (target: 6h)</p>
+          <div class="bar-wrap mb-4" id="barChart"></div>
+          <div class="flex justify-between text-xs text-slate-400 dark:text-slate-500 mb-5">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="flex items-center gap-4 mt-auto">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <defs><linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>
+              <circle class="ring-bg ring-chart" cx="36" cy="36" r="28" fill="none" stroke-width="8"/>
+              <circle class="ring-score ring-chart" cx="36" cy="36" r="28" fill="none" stroke-width="8" stroke-dasharray="176" stroke-dashoffset="56" stroke-linecap="round"/>
+            </svg>
+            <div>
+              <p class="font-sora font-bold text-2xl gradient-text">68%</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Overall Goal</p>
+              <p class="text-xs text-emerald-500 font-semibold mt-0.5">▲ On Track</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Today's Plan + AI Mentor + Interview -->
+      <div class="grid lg:grid-cols-3 gap-5">
+        <div class="feature-card glass rounded-3xl p-6">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="font-sora font-semibold text-base">Today's Plan</h3>
+            <span class="tag-badge text-xs px-2.5 py-1 rounded-full text-brand-600 dark:text-brand-300 font-semibold">AI Generated</span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-700/30">
+              <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></div>
+              <div class="flex-1 min-w-0"><p class="text-sm font-medium line-through text-slate-400">Cell Division – Mitosis</p><p class="text-xs text-slate-400">Biology · 45 min</p></div>
+              <span class="text-xs text-emerald-600 font-semibold flex-shrink-0">Done</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-brand-50 dark:bg-brand-900/20 border border-brand-200/50 dark:border-brand-700/30">
+              <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+              <div class="flex-1 min-w-0"><p class="text-sm font-semibold text-brand-700 dark:text-brand-300">Thermodynamics – Laws</p><p class="text-xs text-slate-500 dark:text-slate-400">Physics · 60 min</p></div>
+              <span class="text-xs font-semibold text-brand-600 dark:text-brand-300 flex-shrink-0">Now →</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10">
+              <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-white/15 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+              <div class="flex-1 min-w-0"><p class="text-sm font-medium text-slate-600 dark:text-slate-300">Organic Chemistry – Alkanes</p><p class="text-xs text-slate-500 dark:text-slate-400">Chemistry · 45 min</p></div>
+              <span class="text-xs text-slate-400 flex-shrink-0">3 PM</span>
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/10">
+              <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-white/15 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div>
+              <div class="flex-1 min-w-0"><p class="text-sm font-medium text-slate-600 dark:text-slate-300">AI Mock Interview</p><p class="text-xs text-slate-500 dark:text-slate-400">Practice · 30 min</p></div>
+              <span class="text-xs text-slate-400 flex-shrink-0">5 PM</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card glass rounded-3xl p-6 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl btn-primary flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg></div>
+              <div>
+                <h3 class="font-sora font-semibold text-sm">AI Mentor</h3>
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span><span class="text-xs text-emerald-500 font-medium">Online · Ready</span></div>
+              </div>
+            </div>
+            <a href="{% url 'aichat' %}" class="text-xs text-brand-600 dark:text-brand-300 font-semibold hover:underline">Open Chat →</a>
+          </div>
+          <div class="flex-1 space-y-3 mb-4 overflow-hidden">
+            <div class="flex gap-2">
+              <div class="w-7 h-7 rounded-xl btn-primary flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+              <div class="bg-slate-100 dark:bg-white/10 rounded-2xl rounded-tl-none px-3.5 py-2.5 max-w-[85%]"><p class="text-xs text-slate-700 dark:text-slate-200">Good morning Rahul! 🌟 Today focus on Thermodynamics. You struggled with Carnot cycle yesterday. Want me to explain it differently?</p></div>
+            </div>
+            <div class="flex gap-2 flex-row-reverse">
+              <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold">R</div>
+              <div class="bg-brand-100 dark:bg-brand-900/40 rounded-2xl rounded-tr-none px-3.5 py-2.5 max-w-[85%]"><p class="text-xs text-brand-700 dark:text-brand-200">Yes please! I'm confused about efficiency formula</p></div>
+            </div>
+            <div class="flex gap-2">
+              <div class="w-7 h-7 rounded-xl btn-primary flex items-center justify-center flex-shrink-0 mt-0.5"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+              <div class="bg-slate-100 dark:bg-white/10 rounded-2xl rounded-tl-none px-3.5 py-2.5 max-w-[85%]"><p class="text-xs text-slate-700 dark:text-slate-200">Of course! η = 1 - (T₂/T₁). Think of T₁ as the "input temperature" and T₂ as "waste heat"... 🔥</p></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Ask your mentor anything..." class="flex-1 px-3.5 py-2.5 text-xs rounded-xl bg-slate-100 dark:bg-white/10 border border-transparent focus:border-brand-400 focus:outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400"/>
+            <button class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
+          </div>
+        </div>
+
+        <div class="feature-card glass rounded-3xl p-6 flex flex-col">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="font-sora font-semibold text-base">Mock Interview</h3>
+            <span class="tag-badge text-xs px-2.5 py-1 rounded-full text-violet-600 dark:text-violet-300 font-semibold">Last Session</span>
+          </div>
+          <div class="flex items-center justify-center mb-5">
+            <div class="relative">
+              <svg width="110" height="110" viewBox="0 0 110 110">
+                <defs><linearGradient id="intGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>
+                <circle cx="55" cy="55" r="44" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="10" transform="rotate(-90 55 55)"/>
+                <circle cx="55" cy="55" r="44" fill="none" stroke="url(#intGrad)" stroke-width="10" stroke-dasharray="276.5" stroke-dashoffset="69" stroke-linecap="round" transform="rotate(-90 55 55)"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="font-sora font-extrabold text-2xl gradient-text">75</span><span class="text-xs text-slate-500 dark:text-slate-400">/100</span></div>
+            </div>
+          </div>
+          <div class="space-y-2.5 flex-1">
+            <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Confidence</span><span class="font-semibold text-brand-600 dark:text-brand-300">78%</span></div><div class="progress-track h-1.5"><div class="progress-fill h-1.5" style="width:78%"></div></div></div>
+            <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Clarity</span><span class="font-semibold text-violet-600 dark:text-violet-300">82%</span></div><div class="progress-track h-1.5"><div class="progress-fill h-1.5" style="width:82%;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div></div></div>
+            <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Speed</span><span class="font-semibold text-amber-600 dark:text-amber-300">65%</span></div><div class="progress-track h-1.5"><div class="progress-fill amber h-1.5" style="width:65%"></div></div></div>
+            <div><div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Knowledge</span><span class="font-semibold text-emerald-600 dark:text-emerald-300">88%</span></div><div class="progress-track h-1.5"><div class="progress-fill green h-1.5" style="width:88%"></div></div></div>
+          </div>
+          <a href="{% url 'interview' %}" class="mt-5 btn-primary text-white text-sm font-semibold py-2.5 rounded-2xl text-center inline-block">Start New Interview →</a>
+        </div>
+      </div>
+
+      <!-- ROW 4: Dynamic Roadmap -->
+      <div class="grid gap-5">
+        <div class="feature-card glass rounded-3xl p-6">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-sora font-semibold text-base">Dynamic Roadmap</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">NEET 2026 · Auto-adjusting</p>
+            </div>
+            <span class="tag-badge text-xs px-2.5 py-1 rounded-full text-emerald-600 dark:text-emerald-300 font-semibold">🟢 On Track</span>
+          </div>
+          <div class="space-y-0">
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="timeline-dot w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div>
+                <div class="timeline-line w-0.5 h-8 mt-1"></div>
+              </div>
+              <div class="pb-6">
+                <div class="flex items-center gap-2 flex-wrap"><p class="text-sm font-semibold">Foundation Phase</p><span class="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-semibold">Completed</span></div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">All basic concepts covered · July – Oct 2025</p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center flex-shrink-0 ring-4 ring-brand-200 dark:ring-brand-800"><span class="text-white text-xs font-bold">2</span></div>
+                <div class="timeline-line w-0.5 h-8 mt-1"></div>
+              </div>
+              <div class="pb-6">
+                <div class="flex items-center gap-2 flex-wrap"><p class="text-sm font-semibold gradient-text">Deep Practice Phase</p><span class="tag-badge text-xs px-2.5 py-0.5 rounded-full text-brand-600 dark:text-brand-300 font-semibold">Active → Nov–Feb</span></div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Chapter-wise tests, weak area focus, NCERT revision</p>
+                <div class="progress-track h-1.5 mt-2 max-w-xs"><div class="progress-fill h-1.5" style="width:58%"></div></div>
+                <p class="text-xs text-brand-600 dark:text-brand-400 mt-1 font-medium">58% complete</p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/15 flex items-center justify-center flex-shrink-0"><span class="text-slate-500 dark:text-slate-400 text-xs font-bold">3</span></div>
+                <div class="timeline-line w-0.5 h-8 mt-1 opacity-30"></div>
+              </div>
+              <div class="pb-6"><p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Mock Test Series</p><p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Full-length tests every week · Mar–Apr 2026</p></div>
+            </div>
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center"><div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/15 flex items-center justify-center flex-shrink-0"><span class="text-slate-500 dark:text-slate-400 text-xs font-bold">4</span></div></div>
+              <div><p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Final Revision + NEET 2026 🎯</p><p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Last 30-day sprint · May 2026</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 5: Quick Actions -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <a href="#" class="feature-card glass card-hover rounded-3xl p-5 text-center group">
+          <div class="w-12 h-12 rounded-2xl btn-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform"><svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div>
+          <p class="font-sora font-semibold text-sm">Practice Test</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Take a quick quiz</p>
+        </a>
+        <a href="#" class="feature-card glass card-hover rounded-3xl p-5 text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform" style="box-shadow:0 4px 20px rgba(124,58,237,0.35)"><svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></div>
+          <p class="font-sora font-semibold text-sm">Mock Interview</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">AI face + voice</p>
+        </a>
+        <a href="#" class="feature-card glass card-hover rounded-3xl p-5 text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform" style="box-shadow:0 4px 20px rgba(16,185,129,0.35)"><svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
+          <p class="font-sora font-semibold text-sm">My Roadmap</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Dynamic plan</p>
+        </a>
+        <a href="{% url 'parent' %}" class="feature-card glass card-hover rounded-3xl p-5 text-center group">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform" style="box-shadow:0 4px 20px rgba(245,158,11,0.35)"><svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg></div>
+          <p class="font-sora font-semibold text-sm">Parent View</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Share progress</p>
+        </a>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  const html = document.documentElement;
+  const themeToggleSide = document.getElementById('themeToggleSide');
+  const themeLabel = document.getElementById('themeLabel');
+  const moonIcon = document.getElementById('moonIconSide');
+  const sunIcon = document.getElementById('sunIconSide');
+
+  function applyTheme(dark) {
+    dark ? html.classList.add('dark') : html.classList.remove('dark');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    if (themeLabel) themeLabel.textContent = dark ? 'Light Mode' : 'Dark Mode';
+    if (moonIcon) moonIcon.style.display = dark ? 'none' : 'block';
+    if (sunIcon)  sunIcon.style.display  = dark ? 'block' : 'none';
+  }
+
+  const saved = localStorage.getItem('theme');
+  const prefersDark = !saved && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved === 'dark' || prefersDark);
+
+  themeToggleSide?.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  // Sidebar
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  function openSidebarFn() { sidebar.classList.remove('sidebar-hidden'); overlay.classList.add('active'); }
+  function closeSidebarFn() { sidebar.classList.add('sidebar-hidden'); overlay.classList.remove('active'); }
+  document.getElementById('openSidebar')?.addEventListener('click', openSidebarFn);
+  document.getElementById('closeSidebar')?.addEventListener('click', closeSidebarFn);
+
+  // Bar Chart
+  const data = [
+    { h: 55, today: false }, { h: 70, today: false }, { h: 40, today: false },
+    { h: 85, today: false }, { h: 60, today: true  }, { h: 30, today: false },
+    { h: 0,  today: false },
+  ];
+  const wrap = document.getElementById('barChart');
+  if (wrap) {
+    data.forEach(d => {
+      const bar = document.createElement('div');
+      bar.className = 'bar flex-1';
+      bar.style.height = '0px';
+      bar.style.background = d.today
+        ? 'linear-gradient(180deg,#6366f1,#a855f7)'
+        : d.h >= 70
+          ? 'linear-gradient(180deg,rgba(99,102,241,0.7),rgba(168,85,247,0.6))'
+          : 'linear-gradient(180deg,rgba(99,102,241,0.35),rgba(168,85,247,0.3))';
+      if (d.today) bar.style.boxShadow = '0 0 12px rgba(99,102,241,0.5)';
+      wrap.appendChild(bar);
+      setTimeout(() => { bar.style.height = d.h + 'px'; }, 300);
+    });
+  }
+
+  // Tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
+      btn.classList.add('active-tab');
+    });
+  });
+
+  // Animate progress bars
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.progress-fill').forEach(el => {
+      const target = el.style.width;
+      el.style.width = '0%';
+      setTimeout(() => { el.style.width = target; }, 200);
+    });
+  });
+</script>
+</body>
+</html>

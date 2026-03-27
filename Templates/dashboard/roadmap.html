@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoalBuddy – Your Career Roadmap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sora: ['Sora','sans-serif'], dm: ['DM Sans','sans-serif'] },
+          colors: {
+            brand: { 50:'#eef2ff', 100:'#e0e7ff', 200:'#c7d2fe', 300:'#a5b4fc', 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 800:'#3730a3', 900:'#312e81' },
+            accent: { 400:'#c084fc', 500:'#a855f7', 600:'#9333ea' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    h1,h2,h3,h4,h5 { font-family: 'Sora', sans-serif; }
+
+    .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.14) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.10) 0%, transparent 60%);
+    }
+    .dark .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.20) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.15) 0%, transparent 60%);
+    }
+    .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card-hover:hover { transform: translateY(-5px); }
+    .nav-link { position:relative; }
+    .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:linear-gradient(90deg,#6366f1,#a855f7); transition:width 0.3s; }
+    .nav-link:hover::after { width:100%; }
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7); transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+    .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12)); border: 1px solid rgba(99,102,241,0.25); }
+    .dark .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2)); border-color: rgba(99,102,241,0.4); }
+    .feature-card { background: rgba(255,255,255,0.7); border: 1px solid rgba(99,102,241,0.12); }
+    .dark .feature-card { background: rgba(30,27,75,0.6); border-color: rgba(99,102,241,0.25); }
+    .section-title { position:relative; display:inline-block; }
+    .section-title::before { content:''; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); width:60px; height:3px; background:linear-gradient(90deg,#6366f1,#a855f7); border-radius:99px; }
+    ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:linear-gradient(#6366f1,#a855f7);border-radius:99px}
+
+    /* Roadmap specific */
+    .timeline-connector {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      background: linear-gradient(180deg, #6366f1, #a855f7);
+      opacity: 0.35;
+    }
+    .timeline-dot {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.15), 0 0 20px rgba(99,102,241,0.3);
+    }
+    .phase-card {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(99,102,241,0.14);
+      transition: all 0.35s ease;
+    }
+    .dark .phase-card {
+      background: rgba(22,20,60,0.65);
+      border-color: rgba(99,102,241,0.28);
+    }
+    .phase-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(99,102,241,0.18);
+      border-color: rgba(99,102,241,0.35);
+    }
+    .milestone-item {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    .milestone-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+    }
+    .progress-bar { background: linear-gradient(90deg, #6366f1, #a855f7); border-radius: 99px; }
+    .goal-chip {
+      cursor: pointer;
+      transition: all 0.25s;
+      border: 2px solid transparent;
+    }
+    .goal-chip:hover, .goal-chip.active {
+      border-color: #6366f1;
+      background: rgba(99,102,241,0.12);
+    }
+    .goal-chip.active .chip-check { opacity: 1; }
+    .chip-check { opacity: 0; transition: opacity 0.2s; }
+
+    .phase-number {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tab-btn { transition: all 0.25s; }
+    .tab-btn.active-tab {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: white;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+    }
+    .skill-bar-wrap { background: rgba(99,102,241,0.1); border-radius: 99px; overflow: hidden; }
+    .dark .skill-bar-wrap { background: rgba(99,102,241,0.2); }
+    .animate-fill { animation: fillBar 1.4s ease forwards; }
+    @keyframes fillBar { from { width: 0% } }
+
+    .resource-card {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(99,102,241,0.12);
+      transition: all 0.3s;
+    }
+    .dark .resource-card { background: rgba(22,20,60,0.6); border-color: rgba(99,102,241,0.25); }
+    .resource-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(99,102,241,0.15); }
+
+    @keyframes pulse-ring { 0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(1.15);opacity:0.2} }
+    .pulse-ring { animation: pulse-ring 2s infinite; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0f0e1a] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+
+<!-- ═══════════════════════════════ NAVBAR ═══════════════════════════════ -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass bg-white/80 dark:bg-[#0f0e1a]/80 border-b border-slate-200/60 dark:border-white/10 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a href="index.html" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="font-sora font-bold text-xl gradient-text">GoalBuddy</span>
+      </a>
+      <div class="hidden md:flex items-center gap-7">
+        <a href="index.html#features" class="nav-link text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 transition-colors">Features</a>
+        <a href="roadmap.html" class="nav-link text-sm font-medium text-brand-600 dark:text-brand-300">Roadmap</a>
+        <a href="index.html#testimonials" class="nav-link text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 transition-colors">Testimonials</a>
+      </div>
+      <div class="hidden md:flex items-center gap-3">
+        <a href="dashboard.html" class="text-sm font-medium px-3 py-2 rounded-xl border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h7v7H3zM3 16h7v4H3zM14 3h7v5h-7zM14 11h7v10h-7z"/></svg>Dashboard
+        </a>
+        <a href="mentor.html" class="text-sm font-medium px-3 py-2 rounded-xl border border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>Mentor
+        </a>
+        <a href="parent.html" class="text-sm font-medium px-3 py-2 rounded-xl border border-green-200 dark:border-green-700 text-green-600 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30 transition-all flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>Parent
+        </a>
+        <button id="themeToggle" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/20 transition-colors" aria-label="Toggle dark mode">
+          <svg class="w-5 h-5 text-slate-600 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          <svg class="w-5 h-5 text-yellow-400 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </button>
+        <a href="login.html" class="text-sm font-medium px-4 py-2 rounded-xl border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all">Login</a>
+        <a href="signup.html" class="text-sm font-medium px-4 py-2 rounded-xl btn-primary text-white">Sign Up Free</a>
+      </div>
+      <button id="mobileMenuBtn" class="md:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-slate-700 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden pb-4 space-y-2">
+      <a href="index.html#features" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10">Features</a>
+      <a href="roadmap.html" class="block px-3 py-2 rounded-lg text-sm text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-900/20">Roadmap</a>
+      <a href="index.html#testimonials" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10">Testimonials</a>
+      <div class="flex gap-2 pt-2">
+        <a href="login.html" class="flex-1 text-center text-sm font-medium px-4 py-2 rounded-xl border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300">Login</a>
+        <a href="signup.html" class="flex-1 text-center text-sm font-medium px-4 py-2 rounded-xl btn-primary text-white">Sign Up</a>
+      </div>
+      <button id="mobileThemeToggle" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-200 dark:hover:bg-white/20 transition-colors">
+        <svg id="mobileSunIcon" class="w-4 h-4 text-yellow-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg id="mobileMoonIcon" class="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <span id="mobileThemeLabel">Switch to Dark Mode</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section class="relative mesh-bg pt-24 pb-16 overflow-hidden">
+  <div class="absolute top-1/4 -left-32 w-80 h-80 rounded-full bg-brand-400/15 blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-accent-500/12 blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <!-- Left copy -->
+      <div>
+        <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-6">
+          <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          Dynamic AI Roadmap Engine
+        </div>
+        <h1 class="text-5xl sm:text-6xl font-sora font-extrabold leading-tight mb-6">
+          Your Personalized<br/>
+          <span class="gradient-text">Career Roadmap 🗺️</span>
+        </h1>
+        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8 max-w-lg">
+          GoalBuddy ka AI engine tumhare goal, performance aur time ke hisab se ek dynamic roadmap banata hai — jo continuously adapt hota rehta hai.
+        </p>
+        <!-- Goal selector chips -->
+        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3">Apna goal select karo:</p>
+        <div class="flex flex-wrap gap-2 mb-8" id="goalChips">
+          <button class="goal-chip active px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-sm font-medium flex items-center gap-2" data-goal="neet">
+            🩺 NEET / Doctor
+            <svg class="chip-check w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </button>
+          <button class="goal-chip px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-sm font-medium flex items-center gap-2" data-goal="jee">
+            ⚙️ JEE / Engineer
+            <svg class="chip-check w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </button>
+          <button class="goal-chip px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-sm font-medium flex items-center gap-2" data-goal="upsc">
+            🏛️ UPSC / Gov Job
+            <svg class="chip-check w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </button>
+          <button class="goal-chip px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-sm font-medium flex items-center gap-2" data-goal="tech">
+            💻 Software / Tech
+            <svg class="chip-check w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-4">
+          <a href="signup.html" class="btn-primary text-white font-semibold px-8 py-3.5 rounded-2xl inline-flex items-center gap-2">
+            Start My Roadmap
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </a>
+          <a href="#phases" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl border border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-white/10 transition-all">
+            Explore Phases
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Progress overview card -->
+      <div class="relative hidden lg:block">
+        <div class="glass bg-white/70 dark:bg-white/10 rounded-3xl border border-white/60 dark:border-white/15 shadow-2xl p-6 max-w-md mx-auto">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <p class="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Current Goal</p>
+              <p class="font-sora font-bold text-lg gradient-text">🩺 NEET 2026</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-slate-400 dark:text-slate-500">Overall Progress</p>
+              <p class="font-sora font-bold text-2xl gradient-text">64%</p>
+            </div>
+          </div>
+          <!-- Main progress bar -->
+          <div class="skill-bar-wrap h-3 mb-5">
+            <div class="progress-bar h-3 animate-fill" style="width:64%"></div>
+          </div>
+          <!-- Phase chips -->
+          <div class="grid grid-cols-3 gap-2 mb-5">
+            <div class="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/40 p-2.5 text-center">
+              <p class="text-lg font-bold text-green-600 dark:text-green-400">✓</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Foundation</p>
+            </div>
+            <div class="rounded-xl bg-brand-50 dark:bg-brand-900/20 border border-brand-300 dark:border-brand-600/60 p-2.5 text-center">
+              <p class="text-lg font-bold gradient-text">2</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Core Topics</p>
+              <span class="text-[10px] text-brand-600 dark:text-brand-300 font-semibold">Active</span>
+            </div>
+            <div class="rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 p-2.5 text-center opacity-50">
+              <p class="text-lg font-bold text-slate-400">3</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mock Tests</p>
+            </div>
+          </div>
+          <!-- Subject bars -->
+          <div class="space-y-3">
+            <p class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Subject Progress</p>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Biology</span><span class="font-semibold text-green-600">82%</span></div>
+              <div class="skill-bar-wrap h-2"><div class="progress-bar h-2 animate-fill" style="width:82%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Chemistry</span><span class="font-semibold text-brand-600">65%</span></div>
+              <div class="skill-bar-wrap h-2"><div class="progress-bar h-2 animate-fill" style="width:65%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span class="text-slate-600 dark:text-slate-300">Physics</span><span class="font-semibold text-orange-500">44%</span></div>
+              <div class="skill-bar-wrap h-2"><div class="h-2 rounded-full animate-fill bg-gradient-to-r from-orange-400 to-pink-500" style="width:44%"></div></div>
+            </div>
+          </div>
+          <!-- AI tip -->
+          <div class="mt-4 bg-brand-50 dark:bg-brand-900/25 rounded-2xl p-3 flex items-start gap-2">
+            <span class="text-lg mt-0.5">🤖</span>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"><span class="font-semibold text-brand-600 dark:text-brand-300">AI Suggestion:</span> Physics mein Thermodynamics weak hai — kal 90 min focus karo!</p>
+          </div>
+        </div>
+        <!-- Floating badge -->
+        <div class="absolute -top-5 -right-4 glass bg-white/80 dark:bg-white/15 rounded-2xl border border-white/60 dark:border-white/20 shadow-lg px-4 py-2.5 flex items-center gap-2">
+          <span class="text-xl">🔥</span>
+          <div>
+            <p class="text-[11px] text-slate-400">Study Streak</p>
+            <p class="text-sm font-bold gradient-text">21 Days!</p>
+          </div>
+        </div>
+        <div class="absolute -bottom-4 -left-4 glass bg-white/80 dark:bg-white/15 rounded-2xl border border-white/60 dark:border-white/20 shadow-lg px-4 py-2.5 flex items-center gap-2">
+          <span class="text-xl">📊</span>
+          <div>
+            <p class="text-[11px] text-slate-400">Rank Prediction</p>
+            <p class="text-sm font-bold gradient-text">Top 5%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ HOW DYNAMIC ROADMAP WORKS ═══════════════════════════════ -->
+<section class="py-20 relative bg-white/40 dark:bg-white/[0.02]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-4">⚡ How It Works</div>
+      <h2 class="text-4xl font-sora font-bold mb-4 section-title">Dynamic Roadmap Kaise Kaam Karta Hai?</h2>
+      <p class="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mt-6">Ye sirf ek static plan nahi — ye ek <strong class="text-brand-600 dark:text-brand-300">living roadmap</strong> hai jo tumhari performance ke saath khud ko update karta rehta hai.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Step 1 -->
+      <div class="feature-card glass card-hover rounded-3xl p-6 shadow-sm text-center relative">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center mb-4 mx-auto shadow-lg shadow-brand-200 dark:shadow-brand-900/50">
+          <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <span class="text-4xl font-sora font-black text-brand-200 dark:text-brand-800 absolute top-4 right-5">01</span>
+        <h3 class="font-sora font-bold text-base mb-2">Goal Select Karo</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Doctor, Engineer, Gov job — kuch bhi. AI tumhara dream goal set karta hai.</p>
+      </div>
+      <!-- Step 2 -->
+      <div class="feature-card glass card-hover rounded-3xl p-6 shadow-sm text-center relative">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mb-4 mx-auto shadow-lg shadow-emerald-200 dark:shadow-emerald-900/50">
+          <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <span class="text-4xl font-sora font-black text-emerald-100 dark:text-emerald-900/60 absolute top-4 right-5">02</span>
+        <h3 class="font-sora font-bold text-base mb-2">AI Roadmap Generate</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Phase-by-phase plan banta hai — subjects, skills aur timeline ke saath.</p>
+      </div>
+      <!-- Step 3 -->
+      <div class="feature-card glass card-hover rounded-3xl p-6 shadow-sm text-center relative">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center mb-4 mx-auto shadow-lg shadow-orange-200 dark:shadow-orange-900/50">
+          <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        </div>
+        <span class="text-4xl font-sora font-black text-orange-100 dark:text-orange-900/60 absolute top-4 right-5">03</span>
+        <h3 class="font-sora font-bold text-base mb-2">Progress Track Hota Hai</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Har test, practice aur session ka data store hota hai. AI tumhari growth dekhta hai.</p>
+      </div>
+      <!-- Step 4 -->
+      <div class="feature-card glass card-hover rounded-3xl p-6 shadow-sm text-center relative">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center mb-4 mx-auto shadow-lg shadow-violet-200 dark:shadow-violet-900/50">
+          <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <span class="text-4xl font-sora font-black text-violet-100 dark:text-violet-900/60 absolute top-4 right-5">04</span>
+        <h3 class="font-sora font-bold text-base mb-2">Roadmap Auto-Adjust</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Slow ho? Timeline extend. Fast ho? Plan accelerate. Roadmap tumhare saath chalata hai.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ ROADMAP PHASES (TIMELINE) ═══════════════════════════════ -->
+<section id="phases" class="py-24 relative overflow-hidden">
+  <div class="absolute top-0 -right-40 w-96 h-96 rounded-full bg-brand-400/8 blur-3xl pointer-events-none"></div>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-4">🗺️ The Journey</div>
+      <h2 class="text-4xl font-sora font-bold mb-4 section-title">4 Phases — Dream se Achievement Tak</h2>
+      <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto mt-6">Har phase ek stepping stone hai. AI decide karta hai kab aage jaana hai — tumhari performance ke basis par.</p>
+    </div>
+
+    <!-- Goal tabs -->
+    <div class="flex flex-wrap justify-center gap-2 mb-12" id="goalTabs">
+      <button class="tab-btn active-tab px-5 py-2.5 rounded-xl text-sm font-semibold" data-tab="neet">🩺 NEET</button>
+      <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300" data-tab="jee">⚙️ JEE</button>
+      <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300" data-tab="upsc">🏛️ UPSC</button>
+      <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300" data-tab="tech">💻 Tech</button>
+    </div>
+
+    <!-- Timeline phases -->
+    <div class="relative" id="roadmapPhases">
+      <!-- Vertical connector line (visible md+) -->
+      <div class="hidden md:block absolute left-1/2 top-8 bottom-8 timeline-connector"></div>
+
+      <!-- ── PHASE 1 ── -->
+      <div class="relative flex flex-col md:flex-row items-center md:items-start gap-6 mb-12 phase-row">
+        <!-- Left card -->
+        <div class="w-full md:w-5/12 md:text-right">
+          <div class="phase-card glass rounded-3xl p-6 shadow-sm">
+            <div class="flex items-center gap-3 md:flex-row-reverse mb-4">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <div class="md:text-right">
+                <span class="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/25 px-2 py-0.5 rounded-full">Completed ✓</span>
+                <h3 class="font-sora font-bold text-lg mt-1">Phase 1: Foundation</h3>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Basic concepts clear karo. NCERT thoroughly padhna aur fundamentals strong karna.</p>
+            <div class="space-y-2" id="phase1-milestones">
+              <div class="milestone-item md:ml-auto md:pl-0 md:pr-6 md:text-right text-sm text-slate-600 dark:text-slate-300">NCERT Bio Class 11 complete</div>
+              <div class="milestone-item md:ml-auto md:pl-0 md:pr-6 md:text-right text-sm text-slate-600 dark:text-slate-300">Basic Chemistry concepts</div>
+              <div class="milestone-item md:ml-auto md:pl-0 md:pr-6 md:text-right text-sm text-slate-600 dark:text-slate-300">Physics mechanics & motion</div>
+            </div>
+            <div class="mt-4">
+              <div class="flex justify-between text-xs mb-1 md:flex-row-reverse"><span class="font-semibold text-green-600">100%</span><span class="text-slate-400">Progress</span></div>
+              <div class="skill-bar-wrap h-2"><div class="h-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 animate-fill" style="width:100%"></div></div>
+            </div>
+            <div class="mt-3 text-xs text-slate-400 md:text-right">⏱️ Duration: 2 months</div>
+          </div>
+        </div>
+
+        <!-- Center dot -->
+        <div class="flex-shrink-0 relative z-10 w-12 h-12 hidden md:flex items-center justify-center">
+          <div class="absolute w-12 h-12 rounded-full bg-green-400/20 pulse-ring"></div>
+          <div class="w-8 h-8 rounded-full timeline-dot bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
+        </div>
+
+        <!-- Right (empty for phase 1) -->
+        <div class="hidden md:block w-5/12"></div>
+      </div>
+
+      <!-- ── PHASE 2 ── ACTIVE ── -->
+      <div class="relative flex flex-col md:flex-row items-center md:items-start gap-6 mb-12">
+        <!-- Left empty -->
+        <div class="hidden md:block w-5/12"></div>
+        <!-- Center dot -->
+        <div class="flex-shrink-0 relative z-10 w-12 h-12 hidden md:flex items-center justify-center">
+          <div class="absolute w-14 h-14 rounded-full bg-brand-400/25 pulse-ring"></div>
+          <div class="w-10 h-10 rounded-full timeline-dot flex items-center justify-center ring-4 ring-brand-200 dark:ring-brand-800">
+            <span class="text-white font-sora font-bold text-sm">2</span>
+          </div>
+        </div>
+        <!-- Right card -->
+        <div class="w-full md:w-5/12">
+          <div class="phase-card glass rounded-3xl p-6 shadow-sm border-brand-300 dark:border-brand-600/50 ring-2 ring-brand-300/40 dark:ring-brand-600/30">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-11 h-11 rounded-2xl btn-primary flex items-center justify-center flex-shrink-0 shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              </div>
+              <div>
+                <span class="text-xs font-semibold text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-900/25 px-2 py-0.5 rounded-full animate-pulse">🔵 Currently Active</span>
+                <h3 class="font-sora font-bold text-lg mt-1">Phase 2: Core Topics</h3>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Deep dive into high-weightage chapters. AI-curated resources aur daily tasks milenge.</p>
+            <div class="space-y-2">
+              <div class="milestone-item text-sm text-slate-600 dark:text-slate-300">Human Physiology (Bio) — 80% done ✓</div>
+              <div class="milestone-item text-sm text-slate-600 dark:text-slate-300">Organic Chemistry reactions</div>
+              <div class="milestone-item text-sm text-slate-600 dark:text-slate-300 opacity-50">Thermodynamics (Physics) — Pending 🔶</div>
+            </div>
+            <div class="mt-4">
+              <div class="flex justify-between text-xs mb-1"><span class="font-semibold text-brand-600">65%</span><span class="text-slate-400">Progress</span></div>
+              <div class="skill-bar-wrap h-2"><div class="progress-bar h-2 animate-fill" style="width:65%"></div></div>
+            </div>
+            <div class="mt-3 text-xs text-slate-400">⏱️ Duration: 3 months &nbsp;|&nbsp; ⚡ AI Adjusted: +2 weeks (Physics weak)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PHASE 3 ── -->
+      <div class="relative flex flex-col md:flex-row items-center md:items-start gap-6 mb-12">
+        <!-- Left card -->
+        <div class="w-full md:w-5/12 md:text-right">
+          <div class="phase-card glass rounded-3xl p-6 shadow-sm opacity-70">
+            <div class="flex items-center gap-3 md:flex-row-reverse mb-4">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+              </div>
+              <div class="md:text-right">
+                <span class="text-xs font-semibold text-slate-400 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-full">🔒 Upcoming</span>
+                <h3 class="font-sora font-bold text-lg mt-1">Phase 3: Mock Tests & Analysis</h3>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Full-length mock tests with AI analysis. Weak areas identify karke targeted revision.</p>
+            <div class="space-y-2">
+              <div class="milestone-item md:pr-6 md:text-right text-sm text-slate-400">Weekly full NEET mock tests</div>
+              <div class="milestone-item md:pr-6 md:text-right text-sm text-slate-400">AI-powered error analysis</div>
+              <div class="milestone-item md:pr-6 md:text-right text-sm text-slate-400">Speed & accuracy improvement</div>
+            </div>
+            <div class="mt-3 text-xs text-slate-400 md:text-right">⏱️ Duration: 2 months</div>
+          </div>
+        </div>
+        <div class="flex-shrink-0 relative z-10 w-12 h-12 hidden md:flex items-center justify-center">
+          <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/15 flex items-center justify-center">
+            <span class="text-slate-500 dark:text-slate-400 font-sora font-bold text-sm">3</span>
+          </div>
+        </div>
+        <div class="hidden md:block w-5/12"></div>
+      </div>
+
+      <!-- ── PHASE 4 ── -->
+      <div class="relative flex flex-col md:flex-row items-center md:items-start gap-6">
+        <div class="hidden md:block w-5/12"></div>
+        <div class="flex-shrink-0 relative z-10 w-12 h-12 hidden md:flex items-center justify-center">
+          <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/15 flex items-center justify-center">
+            <span class="text-slate-500 dark:text-slate-400 font-sora font-bold text-sm">4</span>
+          </div>
+        </div>
+        <div class="w-full md:w-5/12">
+          <div class="phase-card glass rounded-3xl p-6 shadow-sm opacity-60">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+              </div>
+              <div>
+                <span class="text-xs font-semibold text-slate-400 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-full">🔒 Final Phase</span>
+                <h3 class="font-sora font-bold text-lg mt-1">Phase 4: Exam Ready! 🚀</h3>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Last 30 days revision, AI interview prep, confidence boost aur final mock exams.</p>
+            <div class="space-y-2">
+              <div class="milestone-item text-sm text-slate-400">Rapid revision of all chapters</div>
+              <div class="milestone-item text-sm text-slate-400">AI Mock Interview sessions</div>
+              <div class="milestone-item text-sm text-slate-400">Mental health & exam strategy</div>
+            </div>
+            <div class="mt-3 text-xs text-slate-400">⏱️ Duration: 1 month &nbsp;|&nbsp; 🎯 Goal: Top 1%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ STUDY ENGINE + FEATURES ═══════════════════════════════ -->
+<section class="py-20 bg-white/40 dark:bg-white/[0.02]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-4">🧠 Roadmap Features</div>
+      <h2 class="text-4xl font-sora font-bold mb-4 section-title">Roadmap ke Saath Ye Sab Milta Hai</h2>
+      <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto mt-6">Sirf roadmap nahi — ek complete ecosystem jo tumhe goal tak pahunchata hai.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Card 1: Study Engine -->
+      <div class="feature-card glass card-hover rounded-3xl p-7 shadow-sm group">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center mb-5 shadow-lg shadow-brand-200 dark:shadow-brand-900/50">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <h3 class="font-sora font-bold text-lg mb-2">Hyper-Personalized Study Engine</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Netflix jaisa AI — weak topic pe easy questions, strong topic pe advanced push. Difficulty auto-adjust hoti hai.</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0"></span>Daily personalized tasks</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0"></span>Best YouTube videos & notes</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-brand-500 flex-shrink-0"></span>Daily streak rewards 🔥</li>
+        </ul>
+      </div>
+
+      <!-- Card 2: AI Mock Interview -->
+      <div class="feature-card glass card-hover rounded-3xl p-7 shadow-sm group">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center mb-5 shadow-lg shadow-rose-200 dark:shadow-rose-900/50">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+        </div>
+        <h3 class="font-sora font-bold text-lg mb-2">AI Mock Interview 2.0</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Voice + facial analysis se confidence score mile. "Umm" count, eye contact, answer rating — sab track ho.</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0"></span>Voice confidence analysis</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0"></span>Real-time AI scoring</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0"></span>Detailed improvement report</li>
+        </ul>
+        <a href="interview.html" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-rose-600 dark:text-rose-300 hover:gap-2 transition-all">Practice Now <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+      </div>
+
+      <!-- Card 3: AI Mentor -->
+      <div class="feature-card glass card-hover rounded-3xl p-7 shadow-sm group">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center mb-5 shadow-lg shadow-violet-200 dark:shadow-violet-900/50">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        </div>
+        <h3 class="font-sora font-bold text-lg mb-2">AI Mentor Chatbot 24×7</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Personal coach jo daily remind kare, motivate kare aur weakness highlight kare. Raat 2 baje bhi available!</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0"></span>Daily motivation & reminders</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0"></span>Roadmap-aware guidance</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0"></span>Instant doubt resolution</li>
+        </ul>
+        <a href="mentor.html" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-violet-600 dark:text-violet-300 hover:gap-2 transition-all">Chat with Mentor <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+      </div>
+
+      <!-- Card 4: Parent Dashboard -->
+      <div class="feature-card glass card-hover rounded-3xl p-7 shadow-sm group">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center mb-5 shadow-lg shadow-green-200 dark:shadow-green-900/50">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        </div>
+        <h3 class="font-sora font-bold text-lg mb-2">Parent Dashboard</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Parents sirf data nahi — AI insights dekhte hain. "Physics mein consistency low hai" — clear aur actionable reports.</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>Weekly progress reports</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>AI-generated insights</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0"></span>Study consistency tracker</li>
+        </ul>
+        <a href="parent.html" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-300 hover:gap-2 transition-all">View Dashboard <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg></a>
+      </div>
+
+      <!-- Card 5: Gamification -->
+      <div class="feature-card glass card-hover rounded-3xl p-7 shadow-sm group">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mb-5 shadow-lg shadow-yellow-200 dark:shadow-yellow-900/50">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+        </div>
+        <h3 class="font-sora font-bold text-lg mb-2">Gamification System 🎮</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Padhai ko game bana do! XP points, streaks, leaderboard aur daily challenges. Study = addiction (good wali).</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0"></span>XP Points & Level System</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0"></span>City & India Leaderboard</li>
+          <li class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0"></span>Daily streak rewards</li>
+        </ul>
+      </div>
+
+      <!-- Card 6: Dynamic Adjustment -->
+      <div class="feature-card glass card-hover rounded-3xl p-7 shadow-sm group relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-accent-500/5 pointer-events-none"></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center mb-5 shadow-lg shadow-sky-200 dark:shadow-sky-900/50">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <div class="tag-badge inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold text-brand-700 dark:text-brand-300 mb-3">✨ Unique Feature</div>
+        <h3 class="font-sora font-bold text-lg mb-2">Auto-Adjusting Timeline</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Slow performance → roadmap extend. Fast progress → accelerate. Ye "living roadmap" concept hai — static nahi!</p>
+        <div class="bg-brand-50 dark:bg-brand-900/20 rounded-2xl p-3 mt-2">
+          <p class="text-xs text-brand-700 dark:text-brand-300 font-medium">🤖 Latest AI Update:</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">"Physics mein slow progress — Phase 2 timeline 2 weeks extend ki gayi."</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CTA BANNER ═══════════════════════════════ -->
+<section class="py-20 relative overflow-hidden">
+  <div class="absolute inset-0 mesh-bg pointer-events-none"></div>
+  <div class="absolute top-0 left-1/4 w-72 h-72 rounded-full bg-brand-400/10 blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-0 right-1/4 w-72 h-72 rounded-full bg-accent-500/10 blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+    <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-6">🚀 Start Today</div>
+    <h2 class="text-4xl sm:text-5xl font-sora font-extrabold mb-6">
+      Apna Roadmap Aaj Hi<br/>
+      <span class="gradient-text">Start Karo — Free Mein! 🎯</span>
+    </h2>
+    <p class="text-lg text-slate-600 dark:text-slate-400 mb-10 max-w-2xl mx-auto">
+      50,000+ students already apna dream chase kar rahe hain GoalBuddy ke saath. Tumhari baari hai — personalized roadmap abhi generate karo.
+    </p>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-4 max-w-lg mx-auto mb-10">
+      <div class="feature-card glass rounded-2xl p-4 text-center">
+        <p class="text-2xl font-sora font-extrabold gradient-text">50K+</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Students</p>
+      </div>
+      <div class="feature-card glass rounded-2xl p-4 text-center">
+        <p class="text-2xl font-sora font-extrabold gradient-text">92%</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Success Rate</p>
+      </div>
+      <div class="feature-card glass rounded-2xl p-4 text-center">
+        <p class="text-2xl font-sora font-extrabold gradient-text">4.9⭐</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">App Rating</p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-center gap-4">
+      <a href="signup.html" class="btn-primary text-white font-semibold px-10 py-4 rounded-2xl inline-flex items-center gap-2 text-lg">
+        Get My Free Roadmap
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+      <a href="mentor.html" class="inline-flex items-center gap-2 px-10 py-4 rounded-2xl border-2 border-brand-300 dark:border-brand-600 text-brand-700 dark:text-brand-300 font-semibold hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all text-lg">
+        Talk to AI Mentor
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      </a>
+    </div>
+    <p class="text-sm text-slate-400 dark:text-slate-500 mt-5">No credit card required • Free forever plan available • 5 min setup</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer class="bg-slate-900 dark:bg-[#08071a] text-slate-400 pt-16 pb-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <span class="font-sora font-bold text-xl text-white">GoalBuddy</span>
+        </div>
+        <p class="text-sm leading-relaxed mb-4">Empowering students across India to achieve their career dreams with AI-powered guidance.</p>
+        <p class="text-sm">📧 hello@goalbuddy.in</p>
+        <p class="text-sm">📞 +91 98765 43210</p>
+      </div>
+      <div>
+        <h4 class="text-white font-sora font-semibold mb-4">Platform</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="dashboard.html" class="hover:text-white transition-colors">Dashboard</a></li>
+          <li><a href="mentor.html" class="hover:text-white transition-colors">AI Mentor</a></li>
+          <li><a href="interview.html" class="hover:text-white transition-colors">Mock Interview</a></li>
+          <li><a href="parent.html" class="hover:text-white transition-colors">Parent Dashboard</a></li>
+          <li><a href="roadmap.html" class="text-brand-300">Roadmap ←</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-sora font-semibold mb-4">Company</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-sora font-semibold mb-4">Legal</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm">© 2024 GoalBuddy. All rights reserved. Made with ❤️ in India.</p>
+      <div class="flex items-center gap-3">
+        <a href="#" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-brand-600 flex items-center justify-center transition-colors"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+        <a href="#" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-sky-500 flex items-center justify-center transition-colors"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+        <a href="#" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-red-500 flex items-center justify-center transition-colors"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+<script>
+  // ── Dark Mode ──
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+
+  function applyTheme(dark) {
+    dark ? html.classList.add('dark') : html.classList.remove('dark');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    const mobileSun = document.getElementById('mobileSunIcon');
+    const mobileMoon = document.getElementById('mobileMoonIcon');
+    const mobileLabel = document.getElementById('mobileThemeLabel');
+    if (mobileSun && mobileMoon && mobileLabel) {
+      if (dark) { mobileSun.classList.remove('hidden'); mobileMoon.classList.add('hidden'); mobileLabel.textContent = 'Switch to Light Mode'; }
+      else { mobileSun.classList.add('hidden'); mobileMoon.classList.remove('hidden'); mobileLabel.textContent = 'Switch to Dark Mode'; }
+    }
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) applyTheme(true);
+  else applyTheme(false);
+
+  themeToggle.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+  if (mobileThemeToggle) mobileThemeToggle.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  // ── Mobile menu ──
+  document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+    document.getElementById('mobileMenu').classList.toggle('hidden');
+  });
+
+  // ── Goal Chips (hero) ──
+  document.querySelectorAll('#goalChips .goal-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#goalChips .goal-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  // ── Goal Tabs (phases) ──
+  const phaseContent = {
+    neet: {
+      phases: ['Foundation (NCERT)', 'Core Topics (Bio/Chem/Phy)', 'Mock Tests & Analysis', 'Exam Ready 🚀'],
+      colors: ['green', 'brand', 'orange', 'violet'],
+      durations: ['2 months', '3 months', '2 months', '1 month']
+    },
+    jee: {
+      phases: ['Math & Physics Basics', 'Advanced Concepts', 'Problem Solving', 'JEE Ready 🚀'],
+      colors: ['green', 'brand', 'orange', 'violet'],
+      durations: ['2 months', '4 months', '2 months', '1 month']
+    },
+    upsc: {
+      phases: ['Static GK & Polity', 'Current Affairs + History', 'Answer Writing', 'UPSC Ready 🚀'],
+      colors: ['green', 'brand', 'orange', 'violet'],
+      durations: ['3 months', '4 months', '3 months', '2 months']
+    },
+    tech: {
+      phases: ['DSA Fundamentals', 'Projects & Frameworks', 'Leetcode & System Design', 'Job Ready 🚀'],
+      colors: ['green', 'brand', 'orange', 'violet'],
+      durations: ['2 months', '3 months', '2 months', '1 month']
+    }
+  };
+
+  document.querySelectorAll('#goalTabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#goalTabs .tab-btn').forEach(b => {
+        b.classList.remove('active-tab');
+        b.classList.add('bg-slate-100', 'dark:bg-white/10', 'text-slate-600', 'dark:text-slate-300');
+      });
+      btn.classList.add('active-tab');
+      btn.classList.remove('bg-slate-100', 'dark:bg-white/10', 'text-slate-600', 'dark:text-slate-300');
+    });
+  });
+</script> 
+</body>
+</html>

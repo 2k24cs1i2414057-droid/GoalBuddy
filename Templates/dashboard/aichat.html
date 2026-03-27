@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Mentor – GoalBuddy</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sora: ['Sora','sans-serif'], dm: ['DM Sans','sans-serif'] },
+          colors: {
+            brand: { 50:'#eef2ff', 100:'#e0e7ff', 200:'#c7d2fe', 300:'#a5b4fc', 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 800:'#3730a3', 900:'#312e81' },
+            accent: { 400:'#c084fc', 500:'#a855f7', 600:'#9333ea' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    h1,h2,h3,h4,h5 { font-family: 'Sora', sans-serif; }
+
+    .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.14) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.10) 0%, transparent 60%);
+    }
+    .dark .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.20) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.15) 0%, transparent 60%);
+    }
+    .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7); transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+    .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12)); border: 1px solid rgba(99,102,241,0.25); }
+    .dark .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2)); border-color: rgba(99,102,241,0.4); }
+    .nav-link { position:relative; }
+    .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:linear-gradient(90deg,#6366f1,#a855f7); transition:width 0.3s; }
+    .nav-link:hover::after { width:100%; }
+
+    /* Chat specific */
+    .chat-container { height: calc(100vh - 64px); }
+    .messages-area { scroll-behavior: smooth; }
+    .msg-ai { animation: slideInLeft 0.3s ease; }
+    .msg-user { animation: slideInRight 0.3s ease; }
+    @keyframes slideInLeft { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes slideInRight { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
+
+    .typing-dot { animation: typingBounce 1.2s infinite ease-in-out; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-6px);opacity:1} }
+
+    .sidebar-item { transition: all 0.2s; }
+    .sidebar-item:hover { background: rgba(99,102,241,0.08); }
+    .sidebar-item.active { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15)); border-left: 3px solid #6366f1; }
+
+    .quick-chip { transition: all 0.2s; cursor: pointer; }
+    .quick-chip:hover { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15)); border-color: rgba(99,102,241,0.5); transform: translateY(-1px); }
+
+    .send-btn { transition: all 0.2s; }
+    .send-btn:hover { transform: scale(1.05); }
+    .send-btn:active { transform: scale(0.95); }
+
+    .feature-pill { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); transition: all 0.2s; }
+    .feature-pill:hover { background: rgba(99,102,241,0.15); }
+    .dark .feature-pill { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar{width:4px} 
+    ::-webkit-scrollbar-track{background:transparent} 
+    ::-webkit-scrollbar-thumb{background:linear-gradient(#6366f1,#a855f7);border-radius:99px}
+
+    /* Textarea auto-resize */
+    #chatInput { resize: none; min-height: 44px; max-height: 120px; overflow-y: auto; }
+
+    /* Mobile sidebar overlay */
+    #sidebarOverlay { display: none; }
+    #sidebarOverlay.active { display: block; }
+    @media (max-width: 1024px) {
+      #sidebar { transform: translateX(-100%); transition: transform 0.3s ease; position: fixed; z-index: 40; height: 100vh; top: 64px; }
+      #sidebar.open { transform: translateX(0); }
+    }
+
+    /* Pulse ring on AI avatar */
+    .ai-avatar-ring { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); animation: avatarPulse 2.5s infinite; }
+    @keyframes avatarPulse { 70%{box-shadow:0 0 0 8px rgba(99,102,241,0)} 100%{box-shadow:0 0 0 0 rgba(99,102,241,0)} }
+
+    /* Welcome cards */
+    .welcome-card { transition: all 0.25s; cursor: pointer; }
+    .welcome-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(99,102,241,0.15); }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0f0e1a] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass bg-white/80 dark:bg-[#0f0e1a]/80 border-b border-slate-200/60 dark:border-white/10 shadow-sm h-16">
+  <div class="max-w-full px-4 sm:px-6 h-full">
+    <div class="flex items-center justify-between h-full">
+      <!-- Logo -->
+      <a href="{% url 'home' %}" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="font-sora font-bold text-xl gradient-text">GoalBuddy</span>
+      </a>
+
+      <!-- Center title on desktop -->
+      <div class="hidden md:flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center ai-avatar-ring">
+          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        </div>
+        <div>
+          <p class="font-sora font-semibold text-sm leading-tight">AI Mentor</p>
+          <p class="text-xs text-green-500 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block"></span>Online & Ready</p>
+        </div>
+      </div>
+
+      <!-- Right actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Sidebar toggle for mobile -->
+        <button id="sidebarToggle" class="lg:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/20 transition-colors">
+          <svg class="w-5 h-5 text-slate-600 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+        </button>
+        <!-- New Chat -->
+        <button onclick="startNewChat()" class="hidden sm:flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New Chat
+        </button>
+        <!-- Back to home -->
+        <a href="{% url 'home' %}" class="hidden sm:flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Home
+        </a>
+        <!-- Dark mode toggle -->
+        <button id="themeToggle" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/20 transition-colors">
+          <svg class="w-5 h-5 text-slate-600 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          <svg class="w-5 h-5 text-yellow-400 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN LAYOUT -->
+<div class="flex h-screen pt-16">
+
+  <!-- SIDEBAR OVERLAY (mobile) -->
+  <div id="sidebarOverlay" class="fixed inset-0 z-30 bg-black/40 lg:hidden" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-72 bg-white/90 dark:bg-[#13122a]/95 border-r border-slate-200/60 dark:border-white/10 glass flex flex-col">
+    <!-- Sidebar Header -->
+    <div class="p-4 border-b border-slate-200/60 dark:border-white/10">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Chat History</span>
+        <button onclick="startNewChat()" class="w-7 h-7 rounded-lg btn-primary flex items-center justify-center" title="New Chat">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        </button>
+      </div>
+      <!-- Search -->
+      <div class="relative">
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" placeholder="Search chats..." class="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-slate-100 dark:bg-white/10 border-0 outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:ring-2 focus:ring-brand-300 dark:focus:ring-brand-600"/>
+      </div>
+    </div>
+
+    <!-- Chat List -->
+    <div class="flex-1 overflow-y-auto p-3 space-y-1">
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 py-1">Today</p>
+      <div class="sidebar-item active rounded-xl px-3 py-2.5 cursor-pointer pl-4">
+        <p class="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">NEET Preparation Guide</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">Physics + Bio roadmap banao</p>
+      </div>
+      <div class="sidebar-item rounded-xl px-3 py-2.5 cursor-pointer">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Engineering Roadmap</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">JEE ke liye kya karna hai</p>
+      </div>
+
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 py-1 mt-3">Yesterday</p>
+      <div class="sidebar-item rounded-xl px-3 py-2.5 cursor-pointer">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Study Time Management</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">Daily schedule kaise banaye</p>
+      </div>
+      <div class="sidebar-item rounded-xl px-3 py-2.5 cursor-pointer">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Government Job Prep</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">UPSC ya SSC konsa better hai</p>
+      </div>
+      <div class="sidebar-item rounded-xl px-3 py-2.5 cursor-pointer">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Mock Interview Feedback</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">Interview performance review</p>
+      </div>
+
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 py-1 mt-3">This Week</p>
+      <div class="sidebar-item rounded-xl px-3 py-2.5 cursor-pointer">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Mathematics Weak Areas</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">Calculus improve karna hai</p>
+      </div>
+      <div class="sidebar-item rounded-xl px-3 py-2.5 cursor-pointer">
+        <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">Career Options After 12th</p>
+        <p class="text-xs text-slate-400 truncate mt-0.5">Kaunsa field best rahega</p>
+      </div>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="p-4 border-t border-slate-200/60 dark:border-white/10 space-y-2">
+      <!-- User profile -->
+      <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer transition-colors">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">R</div>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold truncate">Rahul Sharma</p>
+          <p class="text-xs text-slate-400 truncate">NEET Aspirant · Class 12</p>
+        </div>
+        <svg class="w-4 h-4 text-slate-400 flex-shrink-0 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <!-- Quick links -->
+      <div class="grid grid-cols-3 gap-1.5">
+        <a href="{% url 'dashboard' %}" class="feature-pill flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-center">
+          <svg class="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h7v7H3zM3 16h7v4H3zM14 3h7v5h-7zM14 11h7v10h-7z"/></svg>
+          <span class="text-xs text-slate-500 dark:text-slate-400">Dashboard</span>
+        </a>
+        <a href="{% url 'interview' %}" class="feature-pill flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-center">
+          <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          <span class="text-xs text-slate-500 dark:text-slate-400">Interview</span>
+        </a>
+        <a href="{% url 'parent' %}" class="feature-pill flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-center">
+          <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+          <span class="text-xs text-slate-500 dark:text-slate-400">Parent</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT AREA -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- Messages Area -->
+    <div id="messagesArea" class="messages-area flex-1 overflow-y-auto px-4 py-6 space-y-6">
+
+      <!-- WELCOME STATE (shown when no messages) -->
+      <div id="welcomeScreen" class="max-w-2xl mx-auto">
+        <!-- AI Avatar -->
+        <div class="flex flex-col items-center mb-8 mt-4">
+          <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center mb-4 shadow-2xl shadow-brand-300/40 dark:shadow-brand-900/60 ai-avatar-ring">
+            <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <h1 class="font-sora font-bold text-2xl sm:text-3xl text-center mb-2">
+            Namaste! Main hoon <span class="gradient-text">GoalBuddy AI</span> 🙏
+          </h1>
+          <p class="text-slate-500 dark:text-slate-400 text-center text-sm sm:text-base max-w-md leading-relaxed">
+            Tumhara personal AI mentor — 24/7 available. Career guidance, study plans, doubt solving, aur bahut kuch. Bas poochho!
+          </p>
+        </div>
+
+        <!-- Capability pills -->
+        <div class="flex flex-wrap justify-center gap-2 mb-8">
+          <span class="tag-badge px-3 py-1.5 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300 flex items-center gap-1.5">🗺️ Personalized Roadmap</span>
+          <span class="tag-badge px-3 py-1.5 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300 flex items-center gap-1.5">📚 Study Plans</span>
+          <span class="tag-badge px-3 py-1.5 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300 flex items-center gap-1.5">🎯 Career Guidance</span>
+          <span class="tag-badge px-3 py-1.5 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300 flex items-center gap-1.5">💡 Doubt Solving</span>
+          <span class="tag-badge px-3 py-1.5 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300 flex items-center gap-1.5">📊 Progress Analysis</span>
+        </div>
+
+        <!-- Quick Start Cards -->
+        <div class="grid sm:grid-cols-2 gap-3 mb-4">
+          <div class="welcome-card glass bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 rounded-2xl p-4" onclick="sendQuickMessage('Mujhe NEET 2025 ke liye complete roadmap chahiye. Main abhi class 11 mein hoon.')">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center flex-shrink-0 text-lg">🩺</div>
+              <div>
+                <p class="font-semibold text-sm mb-1">NEET Roadmap Banao</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Class 11 se NEET tak complete step-by-step plan</p>
+              </div>
+            </div>
+          </div>
+          <div class="welcome-card glass bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 rounded-2xl p-4" onclick="sendQuickMessage('JEE Main ki preparation ke liye best strategy kya hogi? Mera maths weak hai.')">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0 text-lg">⚙️</div>
+              <div>
+                <p class="font-semibold text-sm mb-1">JEE Strategy Plan</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Weak subjects identify karke targeted preparation</p>
+              </div>
+            </div>
+          </div>
+          <div class="welcome-card glass bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 rounded-2xl p-4" onclick="sendQuickMessage('UPSC ki preparation kaise shuru karein? Mujhe pata nahi kahan se start karoon.')">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center flex-shrink-0 text-lg">🏛️</div>
+              <div>
+                <p class="font-semibold text-sm mb-1">Government Job Guide</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">UPSC, SSC, Banking exams ke liye complete guidance</p>
+              </div>
+            </div>
+          </div>
+          <div class="welcome-card glass bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 rounded-2xl p-4" onclick="sendQuickMessage('Mera career goal decide nahi hai. Mujhe 12th ke baad konsa field choose karna chahiye?')">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0 text-lg">🧭</div>
+              <div>
+                <p class="font-semibold text-sm mb-1">Career Discovery</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Apna perfect career path discover karo AI ke saath</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <p class="text-xs text-center text-slate-400 dark:text-slate-500">
+          GoalBuddy AI mistakes kar sakta hai. Important decisions ke liye apne teachers se zaroor verify karein.
+        </p>
+      </div>
+
+      <!-- MESSAGES will be injected here -->
+      <div id="messagesList" class="max-w-2xl mx-auto w-full space-y-5 hidden">
+      </div>
+
+    </div>
+
+    <!-- QUICK CHIPS (contextual suggestions) -->
+    <div id="quickChips" class="px-4 pb-2">
+      <div class="max-w-2xl mx-auto flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <button onclick="sendQuickMessage('Mera weekly study schedule banao')" class="quick-chip flex-shrink-0 text-xs px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-white/5 whitespace-nowrap">📅 Weekly Schedule</button>
+        <button onclick="sendQuickMessage('Meri weak subjects identify karo aur improvement plan do')" class="quick-chip flex-shrink-0 text-xs px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-white/5 whitespace-nowrap">🎯 Weak Areas</button>
+        <button onclick="sendQuickMessage('Best books aur resources suggest karo mere goal ke liye')" class="quick-chip flex-shrink-0 text-xs px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-white/5 whitespace-nowrap">📚 Books & Resources</button>
+        <button onclick="sendQuickMessage('Mock test dena chahta hoon, mujhe prepare karo')" class="quick-chip flex-shrink-0 text-xs px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-white/5 whitespace-nowrap">📝 Mock Test Prep</button>
+        <button onclick="sendQuickMessage('Meri current progress analyze karo aur feedback do')" class="quick-chip flex-shrink-0 text-xs px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-white/5 whitespace-nowrap">📊 Progress Analysis</button>
+      </div>
+    </div>
+
+    <!-- INPUT AREA -->
+    <div class="border-t border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-[#0f0e1a]/90 glass px-4 py-3">
+      <div class="max-w-2xl mx-auto">
+        <div class="flex items-end gap-2 bg-slate-100/80 dark:bg-white/8 border border-slate-200 dark:border-white/15 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-brand-400 focus-within:border-transparent transition-all">
+          <!-- Attachment btn -->
+          <button class="flex-shrink-0 w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/15 flex items-center justify-center transition-colors self-end mb-0.5" title="Attach file">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+          </button>
+          <!-- Textarea -->
+          <textarea id="chatInput" rows="1" placeholder="Koi bhi sawaal poochho... 🙏" class="flex-1 bg-transparent outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 leading-relaxed" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+          <!-- Voice btn -->
+          <button class="flex-shrink-0 w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/15 flex items-center justify-center transition-colors self-end mb-0.5" title="Voice input" id="voiceBtn" onclick="toggleVoice()">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          </button>
+          <!-- Send btn -->
+          <button id="sendBtn" onclick="sendMessage()" class="send-btn flex-shrink-0 w-9 h-9 rounded-xl btn-primary flex items-center justify-center self-end" title="Send">
+            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+        <p class="text-xs text-center text-slate-400 mt-2">Enter dabo ya button click karo • Shift+Enter for new line</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ── Dark mode ──
+  const html = document.documentElement;
+  function applyTheme(dark) {
+    dark ? html.classList.add('dark') : html.classList.remove('dark');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) applyTheme(true);
+  else applyTheme(false);
+  document.getElementById('themeToggle').addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  // ── Sidebar toggle (mobile) ──
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+  }
+  document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+  });
+
+  // ── Chat state ──
+  let messages = [];
+  let isTyping = false;
+  let chatStarted = false;
+
+  // ── AI Responses (Smart pattern matching) ──
+  const aiResponses = {
+    neet: `**NEET 2025 ke liye Complete Roadmap** 🩺
+
+**Phase 1: Foundation (3 months)**
+• Physics: Mechanics, Optics, Modern Physics strengthen karo
+• Chemistry: Organic basics, NCERT completely cover karo
+• Biology: Cell biology + Human physiology priority hai
+
+**Phase 2: Practice (3 months)**
+• Daily 50 MCQs solve karo
+• Previous year papers (2019-2024) complete karo
+• Weak topics pe extra 1 hr daily do
+
+**Phase 3: Revision (2 months)**
+• Short notes banao every chapter ke
+• Full mock tests weekly do
+• Time management practice karo
+
+**Resources:**
+📚 Books: HC Verma (Physics), NCERT (Bio+Chem), MS Chouhan (Organic)
+🎥 YouTube: Unacademy NEET, Physics Wallah
+
+**Target:** Daily 6-8 hours structured study kaafi hai! 💪
+
+Koi specific subject mein help chahiye?`,
+
+    jee: `**JEE Main Strategy Plan** ⚙️
+
+Maths weak hai — koi baat nahi! Targeted approach se fix karenge.
+
+**Mathematics Recovery Plan:**
+1. **Basics first** — Class 11 chapters revisit karo (Sets, Functions, Trigonometry)
+2. **Daily 2 hours** sirf maths ko do
+3. **Problem sets:** Easy → Medium → Hard progression follow karo
+4. **Topics priority:** Calculus, Algebra, Coordinate Geometry — ye teen highest weightage wale hain
+
+**Overall JEE Strategy:**
+• Physics: Concepts clear karo, formulas se zyada understanding
+• Chemistry: NCERT Physical Chemistry + Organic mechanisms
+• Maths: Practice, practice, practice — shortcuts baad mein
+
+**Weekly Schedule Suggestion:**
+- Mon/Wed/Fri: Physics + Chemistry
+- Tue/Thu/Sat: Mathematics focus
+- Sunday: Full revision + Mock test
+
+Kitna time hai tumhare paas JEE ke liye? Usse plan aur customize kar sakte hain! 📊`,
+
+    upsc: `**UPSC Preparation Complete Guide** 🏛️
+
+Pehle samjho — UPSC ek marathon hai, sprint nahi!
+
+**Shuru kahan se karein:**
+1. **NCERT Foundation (6th to 12th)** — Bilkul pehle ye complete karo
+   - History, Geography, Polity, Science
+2. **Standard Books** phir lena:
+   - Laxmikant (Polity) 📖
+   - Bipin Chandra (Modern History)
+   - Majid Husain (Geography)
+
+**Syllabus Samajhna:**
+• Prelims → GS Paper 1 + CSAT
+• Mains → 9 papers (GS I, II, III, IV + Optional)
+• Interview → Personality Test
+
+**Daily Routine:**
+⏰ 8-10 hours minimum
+📰 The Hindu newspaper daily must
+📝 Notes making zaroori hai
+
+**Timeline:**
+Agar abhi start kar rahe ho → 12-15 months realistic preparation
+
+Kya tum working professional ho ya full-time student? Isse plan adjust hoga! 🎯`,
+
+    career: `**Career Discovery — Apna Perfect Path Dhundho** 🧭
+
+12th ke baad career choose karna biggest decision hai!
+
+**Pehle ye identify karo:**
+
+**1. Tumhari Interests kya hain?**
+- Science/Technology pasand? → Engineering, Medical, Research
+- Helping people? → Medicine, Teaching, Social Work
+- Creative mind? → Design, Media, Arts
+- Numbers/Logical? → Finance, Commerce, Law
+
+**2. Top Career Paths After 12th:**
+
+| Stream | Top Options |
+|--------|------------|
+| Science | NEET, JEE, BSc, BCA |
+| Commerce | CA, CS, BBA, Banking |
+| Arts | UPSC, Law, Journalism, Psychology |
+
+**3. Future-Proof Careers:**
+🤖 AI/Data Science
+💊 Healthcare Technology  
+🌱 Renewable Energy
+💼 Entrepreneurship
+
+**GoalBuddy Career Test:**
+Mujhe batao:
+1. Tumhara favorite subject kaunsa hai?
+2. Kya tum 10+ saal usi field mein kaam kar sakte ho?
+3. Salary priority hai ya passion?
+
+In sawaalon ke jawab do, main tumhara personalized career roadmap banata hoon! 🚀`,
+
+    default: `Samajh gaya! Main tumhari help ke liye yahan hoon. 🙏
+
+Tumne jo poochha uske baare mein:
+
+**GoalBuddy tumhe in cheezein provide karta hai:**
+
+📋 **Personalized Study Plan** — Tumhare goal aur current level ke hisaab se
+
+📈 **Progress Tracking** — Har week ki performance analyze karna
+
+🎯 **Weak Area Detection** — AI automatically identify karega kahan improvement chahiye
+
+💬 **24/7 Doubt Solving** — Koi bhi sawaal poochho kabhi bhi
+
+**Aaj se shuru karo:**
+Bas apna main goal batao aur main turant ek customized roadmap bana dunga!
+
+Kya tumhara koi specific subject ya topic hai jisme help chahiye? 😊`
+  };
+
+  function getAIResponse(userMessage) {
+    const msg = userMessage.toLowerCase();
+    if (msg.includes('neet') || msg.includes('medical') || msg.includes('doctor')) return aiResponses.neet;
+    if (msg.includes('jee') || msg.includes('engineer') || msg.includes('iit')) return aiResponses.jee;
+    if (msg.includes('upsc') || msg.includes('government') || msg.includes('ias') || msg.includes('ssc')) return aiResponses.upsc;
+    if (msg.includes('career') || msg.includes('kaunsa field') || msg.includes('12th ke baad') || msg.includes('konsa')) return aiResponses.career;
+    return aiResponses.default;
+  }
+
+  // ── Render message ──
+  function renderMessage(text, isUser, time) {
+    const msgList = document.getElementById('messagesList');
+    const div = document.createElement('div');
+    div.className = `flex gap-3 ${isUser ? 'flex-row-reverse msg-user' : 'msg-ai'}`;
+
+    const avatarClass = isUser
+      ? 'w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0'
+      : 'w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center flex-shrink-0';
+
+    const avatarContent = isUser
+      ? 'R'
+      : `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>`;
+
+    const bubbleBase = isUser
+      ? 'bg-gradient-to-br from-brand-500 to-accent-500 text-white rounded-3xl rounded-tr-sm px-4 py-3 max-w-xs sm:max-w-sm shadow-lg shadow-brand-300/30 dark:shadow-brand-900/30'
+      : 'bg-white/80 dark:bg-white/8 border border-slate-200/60 dark:border-white/10 rounded-3xl rounded-tl-sm px-4 py-3 max-w-sm sm:max-w-lg shadow-sm';
+
+    // Convert markdown-like formatting
+    const formatted = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+
+    div.innerHTML = `
+      <div class="${avatarClass}">${avatarContent}</div>
+      <div class="flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}">
+        <div class="${bubbleBase}">
+          <p class="text-sm leading-relaxed">${formatted}</p>
+        </div>
+        <span class="text-xs text-slate-400 px-1">${time}</span>
+      </div>
+    `;
+    msgList.appendChild(div);
+    return div;
+  }
+
+  // ── Typing indicator ──
+  function showTyping() {
+    const msgList = document.getElementById('messagesList');
+    const div = document.createElement('div');
+    div.id = 'typingIndicator';
+    div.className = 'flex gap-3 msg-ai';
+    div.innerHTML = `
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      </div>
+      <div class="bg-white/80 dark:bg-white/8 border border-slate-200/60 dark:border-white/10 rounded-3xl rounded-tl-sm px-5 py-4 shadow-sm">
+        <div class="flex items-center gap-1.5">
+          <div class="typing-dot w-2 h-2 rounded-full bg-brand-400"></div>
+          <div class="typing-dot w-2 h-2 rounded-full bg-brand-400"></div>
+          <div class="typing-dot w-2 h-2 rounded-full bg-brand-400"></div>
+        </div>
+      </div>
+    `;
+    msgList.appendChild(div);
+    scrollToBottom();
+  }
+
+  function hideTyping() {
+    document.getElementById('typingIndicator')?.remove();
+  }
+
+  function scrollToBottom() {
+    const area = document.getElementById('messagesArea');
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function getTime() {
+    return new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ── Start chat (hide welcome, show messages list) ──
+  function initChat() {
+    if (!chatStarted) {
+      chatStarted = true;
+      document.getElementById('welcomeScreen').classList.add('hidden');
+      document.getElementById('messagesList').classList.remove('hidden');
+    }
+  }
+
+  // ── Send message ──
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text || isTyping) return;
+
+    initChat();
+    input.value = '';
+    input.style.height = 'auto';
+    isTyping = true;
+
+    // User message
+    renderMessage(text, true, getTime());
+    scrollToBottom();
+
+    // Typing indicator
+    showTyping();
+    scrollToBottom();
+
+    // Simulate AI thinking
+    const delay = 1200 + Math.random() * 1000;
+    await new Promise(r => setTimeout(r, delay));
+
+    hideTyping();
+    const response = getAIResponse(text);
+    renderMessage(response, false, getTime());
+    scrollToBottom();
+    isTyping = false;
+  }
+
+  function sendQuickMessage(text) {
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function startNewChat() {
+    chatStarted = false;
+    document.getElementById('welcomeScreen').classList.remove('hidden');
+    document.getElementById('messagesList').classList.add('hidden');
+    document.getElementById('messagesList').innerHTML = '';
+    document.getElementById('chatInput').value = '';
+    closeSidebar();
+    isTyping = false;
+  }
+
+  // ── Voice toggle (visual only) ──
+  let voiceActive = false;
+  function toggleVoice() {
+    voiceActive = !voiceActive;
+    const btn = document.getElementById('voiceBtn');
+    if (voiceActive) {
+      btn.classList.add('text-red-500');
+      btn.querySelector('svg').setAttribute('stroke', '#ef4444');
+    } else {
+      btn.querySelector('svg').setAttribute('stroke', 'currentColor');
+      btn.classList.remove('text-red-500');
+    }
+  }
+
+  // Focus input on load
+  document.getElementById('chatInput').focus();
+</script>
+</body>
+</html>

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoalBuddy – Parent Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sora: ['Sora','sans-serif'], dm: ['DM Sans','sans-serif'] },
+          colors: {
+            brand: { 50:'#eef2ff', 100:'#e0e7ff', 200:'#c7d2fe', 300:'#a5b4fc', 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 800:'#3730a3', 900:'#312e81' },
+            accent: { 400:'#c084fc', 500:'#a855f7', 600:'#9333ea' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    h1,h2,h3,h4,h5 { font-family: 'Sora', sans-serif; }
+    .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.14) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.10) 0%, transparent 60%);
+    }
+    .dark .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.20) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.15) 0%, transparent 60%);
+    }
+    .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .card-hover:hover { transform: translateY(-4px); }
+    .nav-link { position:relative; }
+    .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:linear-gradient(90deg,#6366f1,#a855f7); transition:width 0.3s; }
+    .nav-link:hover::after { width:100%; }
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7); transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+    .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12)); border: 1px solid rgba(99,102,241,0.25); }
+    .dark .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2)); border-color: rgba(99,102,241,0.4); }
+    .feature-card { background: rgba(255,255,255,0.7); border: 1px solid rgba(99,102,241,0.12); }
+    .dark .feature-card { background: rgba(30,27,75,0.6); border-color: rgba(99,102,241,0.25); }
+    .section-title::before { content:''; position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); width:60px; height:3px; background:linear-gradient(90deg,#6366f1,#a855f7); border-radius:99px; }
+    ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:linear-gradient(#6366f1,#a855f7);border-radius:99px}
+
+    /* Progress bar animation */
+    .progress-fill { transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Circular progress */
+    .circle-progress { transform: rotate(-90deg); }
+    .circle-track { fill: none; stroke: rgba(99,102,241,0.12); stroke-width: 8; }
+    .circle-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Insight cards */
+    .insight-card { background: rgba(255,255,255,0.75); border: 1px solid rgba(99,102,241,0.1); }
+    .dark .insight-card { background: rgba(30,27,75,0.55); border-color: rgba(99,102,241,0.2); }
+
+    /* Alert pulse */
+    .alert-pulse { animation: alertPulse 2s ease-in-out infinite; }
+    @keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+    /* Timeline */
+    .timeline-dot::before { content:''; position:absolute; left:-29px; top:50%; transform:translateY(-50%); width:10px; height:10px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#a855f7); box-shadow:0 0 0 3px rgba(99,102,241,0.2); }
+
+    /* Mini bar chart */
+    .bar-item { transition: height 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Tabs */
+    .tab-btn.active { background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.3); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0f0e1a] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass bg-white/80 dark:bg-[#0f0e1a]/80 border-b border-slate-200/60 dark:border-white/10 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a href="{% url 'home' %}" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="font-sora font-bold text-xl gradient-text">GoalBuddy</span>
+      </a>
+      <div class="hidden md:flex items-center gap-7">
+        <a href="{% url 'home' %}#features" class="nav-link text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 transition-colors">Features</a>
+        <a href="{% url 'dashboard' %}" class="nav-link text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 transition-colors">Dashboard</a>
+        <a href="mentor.html" class="nav-link text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-300 transition-colors">AI Mentor</a>
+      </div>
+      <div class="hidden md:flex items-center gap-3">
+        <div class="tag-badge px-3 py-1.5 rounded-full text-xs font-semibold text-green-600 dark:text-green-400 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          Parent View
+        </div>
+        <button id="themeToggle" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/20 transition-colors" aria-label="Toggle dark mode">
+          <svg id="moonIcon" class="w-5 h-5 text-slate-600 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          <svg id="sunIcon" class="w-5 h-5 text-yellow-400 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </button>
+        <a href="{% url 'login' %}" class="text-sm font-medium px-4 py-2 rounded-xl border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all">Logout</a>
+      </div>
+      <button id="mobileMenuBtn" class="md:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-slate-700 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden pb-4 space-y-2">
+      <a href="{% url 'home' %}" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10">Home</a>
+      <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10">Dashboard</a>
+      <a href="mentor.html" class="block px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10">AI Mentor</a>
+      <button id="mobileThemeToggle" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-200 dark:hover:bg-white/20 transition-colors">
+        <svg id="mobileSunIcon" class="w-4 h-4 text-yellow-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg id="mobileMoonIcon" class="w-4 h-4 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <span id="mobileThemeLabel">Switch to Dark Mode</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<section class="mesh-bg pt-28 pb-10 relative overflow-hidden">
+  <div class="absolute top-1/4 -left-32 w-72 h-72 rounded-full bg-brand-400/15 blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-0 -right-32 w-80 h-80 rounded-full bg-accent-500/10 blur-3xl pointer-events-none"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+      <div>
+        <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-3">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          Parent Dashboard
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-sora font-extrabold leading-tight">
+          Hello, <span class="gradient-text">Mr. Sharma 👋</span>
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-1.5 text-sm">Monitoring Rahul's progress · Last updated 2 hours ago</p>
+      </div>
+      <!-- Child selector -->
+      <div class="flex items-center gap-3">
+        <div class="feature-card glass rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer hover:shadow-md transition-all">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-sm">R</div>
+          <div>
+            <p class="font-sora font-semibold text-sm">Rahul Sharma</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Class 12 · NEET Aspirant</p>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+        <button class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center relative hover:bg-slate-200 dark:hover:bg-white/20 transition-colors">
+          <svg class="w-5 h-5 text-slate-600 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 alert-pulse"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- STAT CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <!-- Overall Score -->
+    <div class="feature-card glass card-hover rounded-3xl p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center shadow-lg shadow-brand-200 dark:shadow-brand-900/50">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">+8%</span>
+      </div>
+      <p class="text-2xl font-sora font-extrabold">78<span class="text-base font-normal text-slate-400">/100</span></p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Overall Score</p>
+    </div>
+    <!-- Study Hours -->
+    <div class="feature-card glass card-hover rounded-3xl p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200 dark:shadow-emerald-900/50">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">+1.5h</span>
+      </div>
+      <p class="text-2xl font-sora font-extrabold">4.2<span class="text-base font-normal text-slate-400">h/day</span></p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Avg Study Hours</p>
+    </div>
+    <!-- Streak -->
+    <div class="feature-card glass card-hover rounded-3xl p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-orange-900/50">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">🔥 Active</span>
+      </div>
+      <p class="text-2xl font-sora font-extrabold">14<span class="text-base font-normal text-slate-400"> days</span></p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Study Streak</p>
+    </div>
+    <!-- Mock Tests -->
+    <div class="feature-card glass card-hover rounded-3xl p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-sky-200 dark:shadow-sky-900/50">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <span class="text-xs font-semibold px-2 py-1 rounded-full bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400">+3 new</span>
+      </div>
+      <p class="text-2xl font-sora font-extrabold">12<span class="text-base font-normal text-slate-400"> tests</span></p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mock Tests Done</p>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid lg:grid-cols-3 gap-6 mb-8">
+
+    <!-- AI INSIGHTS (spans 2 cols) -->
+    <div class="lg:col-span-2 feature-card glass rounded-3xl p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="font-sora font-bold text-lg">AI Smart Insights</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Personalized analysis based on Rahul's last 30 days</p>
+        </div>
+        <div class="tag-badge px-3 py-1.5 rounded-full text-xs font-semibold text-brand-600 dark:text-brand-300 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          AI Analysis
+        </div>
+      </div>
+      <div class="space-y-3">
+        <!-- Insight 1 - Positive -->
+        <div class="insight-card glass rounded-2xl p-4 flex items-start gap-4">
+          <div class="w-9 h-9 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Rahul is excelling in Biology 🎉</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">His Biology score jumped from 62% to 81% in the last 3 weeks. He's consistently completing daily practice sessions.</p>
+          </div>
+          <span class="text-xs font-bold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg flex-shrink-0">+19%</span>
+        </div>
+        <!-- Insight 2 - Warning -->
+        <div class="insight-card glass rounded-2xl p-4 flex items-start gap-4">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Physics needs attention ⚠️</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Rahul is struggling with Thermodynamics and Optics. He has skipped 4 Physics sessions this week. Encourage him to study for 45 more minutes daily.</p>
+          </div>
+          <span class="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-lg flex-shrink-0">Needs Work</span>
+        </div>
+        <!-- Insight 3 - Info -->
+        <div class="insight-card glass rounded-2xl p-4 flex items-start gap-4">
+          <div class="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">NEET 2025 Probability: <span class="gradient-text">72%</span></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Based on current trajectory, Rahul has a 72% chance of clearing NEET 2025 cutoff. Improving Chemistry consistency by 20% can push this to 85%.</p>
+          </div>
+          <span class="text-xs font-bold text-brand-600 dark:text-brand-300 bg-brand-100 dark:bg-brand-900/30 px-2 py-1 rounded-lg flex-shrink-0">72%</span>
+        </div>
+        <!-- Insight 4 - Positive -->
+        <div class="insight-card glass rounded-2xl p-4 flex items-start gap-4">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Study consistency improved 📈</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Rahul maintained a 14-day study streak. He's studying an average of 4.2 hours per day vs 2.8 hours last month. Great improvement!</p>
+          </div>
+          <span class="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-lg flex-shrink-0">+50%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="space-y-5">
+      <!-- Circular Progress -->
+      <div class="feature-card glass rounded-3xl p-6 shadow-sm text-center">
+        <h3 class="font-sora font-bold text-base mb-1">Goal Completion</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Monthly target progress</p>
+        <div class="relative inline-flex items-center justify-center">
+          <svg class="circle-progress w-32 h-32" viewBox="0 0 100 100">
+            <circle class="circle-track" cx="50" cy="50" r="38"/>
+            <circle class="circle-fill" cx="50" cy="50" r="38"
+              stroke="url(#progressGrad)"
+              stroke-dasharray="238.76"
+              stroke-dashoffset="57.3"
+            />
+            <defs>
+              <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#a855f7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-sora font-extrabold gradient-text">76%</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Complete</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <div class="bg-brand-50 dark:bg-brand-900/20 rounded-xl p-3">
+            <p class="text-lg font-sora font-bold gradient-text">38</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Topics Done</p>
+          </div>
+          <div class="bg-slate-100 dark:bg-white/5 rounded-xl p-3">
+            <p class="text-lg font-sora font-bold text-slate-700 dark:text-slate-200">12</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Remaining</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="feature-card glass rounded-3xl p-5 shadow-sm">
+        <h3 class="font-sora font-bold text-sm mb-4">Quick Actions</h3>
+        <div class="space-y-2">
+          <button class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-brand-50 dark:bg-brand-900/20 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors text-left group">
+            <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            <span class="text-sm font-medium text-brand-700 dark:text-brand-300">Message Rahul</span>
+            <svg class="w-4 h-4 text-brand-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </button>
+          <button class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors text-left group">
+            <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="text-sm font-medium text-purple-700 dark:text-purple-300">Download Report</span>
+            <svg class="w-4 h-4 text-purple-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </button>
+          <button class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors text-left group">
+            <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="text-sm font-medium text-green-700 dark:text-green-300">Book Counselling</span>
+            <svg class="w-4 h-4 text-green-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBJECT-WISE PERFORMANCE -->
+  <div class="feature-card glass rounded-3xl p-6 shadow-sm mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div>
+        <h2 class="font-sora font-bold text-lg">Subject-wise Performance</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Current month scores vs last month</p>
+      </div>
+      <!-- Tab switcher -->
+      <div class="flex gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1">
+        <button onclick="switchTab('week')" id="tab-week" class="tab-btn active text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">This Week</button>
+        <button onclick="switchTab('month')" id="tab-month" class="tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-all">This Month</button>
+        <button onclick="switchTab('all')" id="tab-all" class="tab-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-all">All Time</button>
+      </div>
+    </div>
+    <div class="space-y-5">
+      <!-- Biology -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-sm">🧬</div>
+            <span class="text-sm font-semibold">Biology</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400">Last: 62%</span>
+            <span class="text-sm font-bold text-green-600 dark:text-green-400">81%</span>
+          </div>
+        </div>
+        <div class="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full rounded-full progress-fill bg-gradient-to-r from-green-400 to-teal-500" style="width:81%"></div>
+        </div>
+      </div>
+      <!-- Chemistry -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-sm">⚗️</div>
+            <span class="text-sm font-semibold">Chemistry</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400">Last: 58%</span>
+            <span class="text-sm font-bold text-blue-600 dark:text-blue-400">70%</span>
+          </div>
+        </div>
+        <div class="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full rounded-full progress-fill bg-gradient-to-r from-blue-400 to-brand-500" style="width:70%"></div>
+        </div>
+      </div>
+      <!-- Physics -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-sm">⚡</div>
+            <span class="text-sm font-semibold">Physics</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-medium">Needs Attention</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400">Last: 61%</span>
+            <span class="text-sm font-bold text-amber-600 dark:text-amber-400">57%</span>
+          </div>
+        </div>
+        <div class="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full rounded-full progress-fill bg-gradient-to-r from-amber-400 to-orange-500" style="width:57%"></div>
+        </div>
+      </div>
+      <!-- English -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center text-sm">📚</div>
+            <span class="text-sm font-semibold">English</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400">Last: 74%</span>
+            <span class="text-sm font-bold gradient-text">88%</span>
+          </div>
+        </div>
+        <div class="h-2.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full rounded-full progress-fill bg-gradient-to-r from-brand-400 to-accent-500" style="width:88%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM GRID -->
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    <!-- Weekly Activity Bar Chart -->
+    <div class="feature-card glass rounded-3xl p-6 shadow-sm">
+      <h3 class="font-sora font-bold text-base mb-1">Weekly Study Activity</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Hours studied per day this week</p>
+      <div class="flex items-end justify-between gap-2 h-28">
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-gradient-to-t from-brand-500 to-accent-400 bar-item" style="height:55%"></div>
+          <span class="text-xs text-slate-400">Mon</span>
+        </div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-gradient-to-t from-brand-500 to-accent-400 bar-item" style="height:80%"></div>
+          <span class="text-xs text-slate-400">Tue</span>
+        </div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-gradient-to-t from-brand-500 to-accent-400 bar-item opacity-40" style="height:20%"></div>
+          <span class="text-xs text-amber-500">Wed</span>
+        </div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-gradient-to-t from-brand-500 to-accent-400 bar-item" style="height:90%"></div>
+          <span class="text-xs text-slate-400">Thu</span>
+        </div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-gradient-to-t from-brand-500 to-accent-400 bar-item" style="height:70%"></div>
+          <span class="text-xs text-slate-400">Fri</span>
+        </div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-gradient-to-t from-emerald-400 to-teal-400 bar-item" style="height:100%"></div>
+          <span class="text-xs text-emerald-500">Sat</span>
+        </div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div class="w-full rounded-t-lg bg-slate-200 dark:bg-white/10 bar-item" style="height:10%"></div>
+          <span class="text-xs text-slate-300">Sun</span>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-white/10 pt-3">
+        <span>⚠️ Wednesday: Low activity detected</span>
+        <span class="text-brand-500 font-medium cursor-pointer hover:underline">Details →</span>
+      </div>
+    </div>
+
+    <!-- Recent Activity Timeline -->
+    <div class="feature-card glass rounded-3xl p-6 shadow-sm">
+      <h3 class="font-sora font-bold text-base mb-1">Recent Activity</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Last 7 days highlights</p>
+      <div class="relative pl-8 border-l-2 border-dashed border-slate-200 dark:border-white/10 space-y-5">
+        <div class="relative timeline-dot">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Completed Mock Test #12</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Scored 78/100 — Top 15% rank</p>
+          <p class="text-xs text-brand-500 mt-0.5">Today, 10:30 AM</p>
+        </div>
+        <div class="relative timeline-dot">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">AI Mentor Session — Biology</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Completed Cell Division chapter with 94% quiz score</p>
+          <p class="text-xs text-brand-500 mt-0.5">Yesterday, 7:15 PM</p>
+        </div>
+        <div class="relative timeline-dot">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">🔥 14-Day Streak Achieved!</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Consistency badge unlocked</p>
+          <p class="text-xs text-brand-500 mt-0.5">2 days ago</p>
+        </div>
+        <div class="relative timeline-dot">
+          <p class="text-sm font-semibold text-amber-600 dark:text-amber-400">Physics session skipped</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Thermodynamics session was not completed</p>
+          <p class="text-xs text-brand-500 mt-0.5">3 days ago</p>
+        </div>
+        <div class="relative timeline-dot">
+          <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Dynamic Roadmap Updated</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">AI adjusted Chemistry plan for 2 extra days</p>
+          <p class="text-xs text-brand-500 mt-0.5">4 days ago</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Roadmap Status + Alerts -->
+    <div class="space-y-5">
+      <!-- Roadmap -->
+      <div class="feature-card glass rounded-3xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-sora font-bold text-sm">Dynamic Roadmap Status</h3>
+          <span class="text-xs text-brand-500 font-medium cursor-pointer hover:underline">View Full →</span>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Phase 1: Foundation Complete</p>
+              <div class="h-1.5 bg-slate-100 dark:bg-white/10 rounded-full mt-1 overflow-hidden">
+                <div class="h-full bg-green-400 rounded-full" style="width:100%"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-green-600 dark:text-green-400">100%</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-xl btn-primary flex items-center justify-center flex-shrink-0">
+              <span class="text-white text-xs font-bold">2</span>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Phase 2: Advanced Topics</p>
+              <div class="h-1.5 bg-slate-100 dark:bg-white/10 rounded-full mt-1 overflow-hidden">
+                <div class="h-full progress-fill bg-gradient-to-r from-brand-400 to-accent-500 rounded-full" style="width:62%"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold gradient-text">62%</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+              <span class="text-slate-400 text-xs font-bold">3</span>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-slate-400">Phase 3: Revision & Tests</p>
+              <div class="h-1.5 bg-slate-100 dark:bg-white/10 rounded-full mt-1 overflow-hidden">
+                <div class="h-full bg-slate-300 dark:bg-white/20 rounded-full" style="width:0%"></div>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-slate-400">0%</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-white/10">🤖 AI adjusted roadmap: +5 days added to Chemistry phase based on performance</p>
+      </div>
+
+      <!-- Parent Alerts -->
+      <div class="feature-card glass rounded-3xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-sora font-bold text-sm">Parent Alerts</h3>
+          <span class="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">2 New</span>
+        </div>
+        <div class="space-y-2.5">
+          <div class="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/15 rounded-2xl p-3">
+            <span class="text-base">⚠️</span>
+            <div>
+              <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">Low Physics Study Time</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Only 20 min spent on Physics today. Target is 60 min.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 bg-green-50 dark:bg-green-900/15 rounded-2xl p-3">
+            <span class="text-base">🎉</span>
+            <div>
+              <p class="text-xs font-semibold text-green-700 dark:text-green-300">Mock Test Rank Improved</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Rahul moved to Top 15% in latest NEET mock test!</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 bg-brand-50 dark:bg-brand-900/15 rounded-2xl p-3">
+            <span class="text-base">📅</span>
+            <div>
+              <p class="text-xs font-semibold text-brand-700 dark:text-brand-300">Parent-Teacher Meet</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Scheduled for 28 March, 6 PM. Confirm attendance.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-slate-900 dark:bg-[#080714] text-slate-400 mt-16 py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <span class="font-sora font-bold text-lg text-white">GoalBuddy</span>
+        </div>
+        <p class="text-sm leading-relaxed mb-3">Empowering students across India to achieve their career dreams with AI-powered guidance.</p>
+        <p class="text-sm">📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b1d9d4dddddef1d6ded0ddd3c4d5d5c89fd8df">[email&#160;protected]</a></p>
+        <p class="text-sm">📞 +91 98765 43210</p>
+      </div>
+      <div>
+        <h4 class="text-white font-sora font-semibold mb-4">Platform</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="{% url 'dashboard' %}" class="hover:text-white transition-colors">Dashboard</a></li>
+          <li><a href="mentor.html" class="hover:text-white transition-colors">AI Mentor</a></li>
+          <li><a href="{% url 'interview' %}" class="hover:text-white transition-colors">Mock Interview</a></li>
+          <li><a href="{% url 'parent' %}" class="hover:text-white transition-colors">Parent Dashboard</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-sora font-semibold mb-4">Company</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-sora font-semibold mb-4">Legal</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-sm">© 2024 GoalBuddy. All rights reserved. Made with ❤️ in India.</p>
+      <div class="flex items-center gap-3">
+        <a href="#" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-brand-600 flex items-center justify-center transition-colors"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+        <a href="#" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-sky-500 flex items-center justify-center transition-colors"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+        <a href="#" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-red-500 flex items-center justify-center transition-colors"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // ── Dark mode ──
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+
+  function applyTheme(dark) {
+    if (dark) { html.classList.add('dark'); html.classList.remove('light'); }
+    else { html.classList.remove('dark'); html.classList.add('light'); }
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    const mobileSun = document.getElementById('mobileSunIcon');
+    const mobileMoon = document.getElementById('mobileMoonIcon');
+    const mobileLabel = document.getElementById('mobileThemeLabel');
+    if (mobileSun && mobileMoon && mobileLabel) {
+      if (dark) { mobileSun.classList.remove('hidden'); mobileMoon.classList.add('hidden'); mobileLabel.textContent = 'Switch to Light Mode'; }
+      else { mobileSun.classList.add('hidden'); mobileMoon.classList.remove('hidden'); mobileLabel.textContent = 'Switch to Dark Mode'; }
+    }
+  }
+
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) applyTheme(true);
+  else applyTheme(false);
+
+  themeToggle.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+  if (mobileThemeToggle) mobileThemeToggle.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  // ── Mobile menu ──
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  if (mobileMenuBtn && mobileMenu) mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+  // ── Tabs ──
+  function switchTab(tab) {
+    ['week','month','all'].forEach(t => {
+      const btn = document.getElementById('tab-' + t);
+      if (t === tab) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  }
+</script>
+</body>
+</html>

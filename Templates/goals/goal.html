@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GoalBuddy – Choose Your Goal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sora: ['Sora','sans-serif'], dm: ['DM Sans','sans-serif'] },
+          colors: {
+            brand: { 50:'#eef2ff', 100:'#e0e7ff', 200:'#c7d2fe', 300:'#a5b4fc', 400:'#818cf8', 500:'#6366f1', 600:'#4f46e5', 700:'#4338ca', 800:'#3730a3', 900:'#312e81' },
+            accent: { 400:'#c084fc', 500:'#a855f7', 600:'#9333ea' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; }
+    h1,h2,h3,h4,h5 { font-family: 'Sora', sans-serif; }
+
+    .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.18) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.14) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.10) 0%, transparent 60%);
+    }
+    .dark .mesh-bg {
+      background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(99,102,241,0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,85,247,0.20) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(99,102,241,0.15) 0%, transparent 60%);
+    }
+    .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+    .gradient-text { background: linear-gradient(135deg, #6366f1, #a855f7); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #a855f7); transition: all 0.3s; box-shadow: 0 4px 20px rgba(99,102,241,0.35); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+    .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12)); border: 1px solid rgba(99,102,241,0.25); }
+    .dark .tag-badge { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2)); border-color: rgba(99,102,241,0.4); }
+    .nav-link { position:relative; }
+    .nav-link::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:linear-gradient(90deg,#6366f1,#a855f7); transition:width 0.3s; }
+    .nav-link:hover::after { width:100%; }
+
+    /* Goal Cards */
+    .goal-card {
+      background: rgba(255,255,255,0.72);
+      border: 2px solid rgba(99,102,241,0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .dark .goal-card {
+      background: rgba(30,27,75,0.55);
+      border-color: rgba(99,102,241,0.2);
+    }
+    .goal-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(168,85,247,0.06));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .goal-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(99,102,241,0.18); border-color: rgba(99,102,241,0.4); }
+    .goal-card:hover::before { opacity: 1; }
+    .goal-card.selected {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2), 0 20px 40px rgba(99,102,241,0.22);
+      transform: translateY(-6px);
+    }
+    .goal-card.selected::before { opacity: 1; }
+    .dark .goal-card:hover, .dark .goal-card.selected {
+      box-shadow: 0 20px 40px rgba(99,102,241,0.28);
+    }
+    .check-ring {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid rgba(99,102,241,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .goal-card.selected .check-ring {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-color: transparent;
+    }
+    .check-ring svg { opacity: 0; transform: scale(0.5); transition: all 0.25s; }
+    .goal-card.selected .check-ring svg { opacity: 1; transform: scale(1); }
+
+    /* Progress bar */
+    .progress-track { background: rgba(99,102,241,0.12); border-radius: 99px; }
+    .progress-fill { background: linear-gradient(90deg, #6366f1, #a855f7); border-radius: 99px; transition: width 0.5s ease; }
+
+    /* Step indicator */
+    .step-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(99,102,241,0.25);
+      transition: all 0.3s;
+    }
+    .step-dot.active { background: linear-gradient(135deg, #6366f1, #a855f7); transform: scale(1.3); }
+    .step-dot.done { background: linear-gradient(135deg, #6366f1, #a855f7); }
+
+    /* Search bar */
+    .search-input {
+      background: rgba(255,255,255,0.8);
+      border: 1.5px solid rgba(99,102,241,0.2);
+      transition: all 0.3s;
+    }
+    .dark .search-input {
+      background: rgba(30,27,75,0.6);
+      border-color: rgba(99,102,241,0.3);
+      color: #e2e8f0;
+    }
+    .search-input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+    .search-input::placeholder { color: #94a3b8; }
+
+    /* Category pill */
+    .cat-pill {
+      border: 1.5px solid rgba(99,102,241,0.2);
+      transition: all 0.25s;
+      cursor: pointer;
+      font-size: 0.82rem;
+    }
+    .cat-pill:hover, .cat-pill.active {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    /* Roadmap preview animation */
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    .slide-up { animation: slideUp 0.4s ease forwards; }
+
+    /* Floating badge */
+    @keyframes floatBadge { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .float-badge { animation: floatBadge 3s ease-in-out infinite; }
+
+    ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:linear-gradient(#6366f1,#a855f7);border-radius:99px}
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0f0e1a] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass bg-white/80 dark:bg-[#0f0e1a]/80 border-b border-slate-200/60 dark:border-white/10 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a href="{% url 'home' %}" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <span class="font-sora font-bold text-xl gradient-text">GoalBuddy</span>
+      </a>
+
+      <!-- Steps (desktop) -->
+      <div class="hidden md:flex items-center gap-2">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full btn-primary flex items-center justify-center text-white text-xs font-bold">1</div>
+          <span class="text-sm font-medium text-brand-600 dark:text-brand-300">Choose Goal</span>
+        </div>
+        <div class="w-8 h-px bg-slate-300 dark:bg-white/20"></div>
+        <div class="flex items-center gap-2 opacity-40">
+          <div class="w-7 h-7 rounded-full border-2 border-slate-300 dark:border-white/20 flex items-center justify-center text-xs font-bold">2</div>
+          <span class="text-sm font-medium">Your Profile</span>
+        </div>
+        <div class="w-8 h-px bg-slate-300 dark:bg-white/20"></div>
+        <div class="flex items-center gap-2 opacity-40">
+          <div class="w-7 h-7 rounded-full border-2 border-slate-300 dark:border-white/20 flex items-center justify-center text-xs font-bold">3</div>
+          <span class="text-sm font-medium">Roadmap</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="themeToggle" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/20 transition-colors" aria-label="Toggle dark mode">
+          <svg class="w-5 h-5 text-slate-600 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          <svg class="w-5 h-5 text-yellow-400 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </button>
+        <a href="{% url 'login' %}" class="hidden sm:block text-sm font-medium px-4 py-2 rounded-xl border border-brand-200 dark:border-brand-700 text-brand-600 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/30 transition-all">Login</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="min-h-screen mesh-bg pt-24 pb-20">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="text-center mb-10 slide-up">
+      <div class="tag-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium text-brand-700 dark:text-brand-300 mb-4">
+        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+        Step 1 of 3 — Goal Selection
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-sora font-extrabold leading-tight mb-4">
+        What's Your <span class="gradient-text">Dream Career?</span> 🎯
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-base sm:text-lg">
+        Select your career goal and GoalBuddy will craft a personalized AI-powered roadmap just for you.
+      </p>
+    </div>
+
+    <!-- Search + Filter Row -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+      <div class="relative flex-1">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input id="goalSearch" type="text" placeholder="Search your career goal..." class="search-input w-full pl-10 pr-4 py-3 rounded-2xl text-sm font-medium" />
+      </div>
+      <!-- Category pills -->
+      <div class="flex gap-2 flex-wrap">
+        <button class="cat-pill active px-4 py-2.5 rounded-xl font-medium bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300" data-cat="all">All</button>
+        <button class="cat-pill px-4 py-2.5 rounded-xl font-medium bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300" data-cat="medical">Medical</button>
+        <button class="cat-pill px-4 py-2.5 rounded-xl font-medium bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300" data-cat="engineering">Engineering</button>
+        <button class="cat-pill px-4 py-2.5 rounded-xl font-medium bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300" data-cat="government">Govt Jobs</button>
+        <button class="cat-pill px-4 py-2.5 rounded-xl font-medium bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300" data-cat="business">Business</button>
+        <button class="cat-pill px-4 py-2.5 rounded-xl font-medium bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300" data-cat="arts">Arts & Design</button>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="flex items-center gap-6 mb-8 px-1">
+      <p class="text-sm text-slate-500 dark:text-slate-400"><span class="font-semibold text-slate-700 dark:text-slate-200" id="visibleCount">16</span> goals available</p>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        <span class="text-sm text-slate-500 dark:text-slate-400">AI Roadmap ready for each</span>
+      </div>
+    </div>
+
+    <!-- Goal Cards Grid -->
+    <div id="goalGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+
+      <!-- Doctor -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Doctor (NEET)" data-cat="medical" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-red-500 flex items-center justify-center mb-4 shadow-lg shadow-rose-200 dark:shadow-rose-900/40 text-2xl">🏥</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Doctor</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">NEET UG/PG Prep</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-rose-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-red-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">12.4k students</span>
+        </div>
+      </div>
+
+      <!-- IIT Engineer -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="IIT Engineer (JEE)" data-cat="engineering" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center mb-4 shadow-lg shadow-brand-200 dark:shadow-brand-900/40 text-2xl">⚙️</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">IIT Engineer</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">JEE Main / Advanced</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-brand-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-accent-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">9.8k students</span>
+        </div>
+      </div>
+
+      <!-- IAS/IPS -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="IAS / IPS Officer" data-cat="government" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-4 shadow-lg shadow-amber-200 dark:shadow-amber-900/40 text-2xl">🏛️</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">IAS / IPS</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">UPSC Civil Services</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-amber-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-orange-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">7.2k students</span>
+        </div>
+      </div>
+
+      <!-- Software Developer -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Software Developer" data-cat="engineering" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center mb-4 shadow-lg shadow-cyan-200 dark:shadow-cyan-900/40 text-2xl">💻</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Software Dev</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Tech & Coding Career</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-cyan-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-blue-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">11.1k students</span>
+        </div>
+      </div>
+
+      <!-- CA -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Chartered Accountant" data-cat="business" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mb-4 shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 text-2xl">📊</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">CA (Chartered)</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">CA Foundation / Final</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-emerald-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-teal-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">5.3k students</span>
+        </div>
+      </div>
+
+      <!-- Army / Defence -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Army / Defence Officer" data-cat="government" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center mb-4 shadow-lg text-2xl">🎖️</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Army Officer</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">NDA / CDS / AFCAT</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-slate-500 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-slate-700 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">4.1k students</span>
+        </div>
+      </div>
+
+      <!-- Lawyer -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Lawyer (CLAT)" data-cat="government" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-violet-200 dark:shadow-violet-900/40 text-2xl">⚖️</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Lawyer</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">CLAT / Law Entrance</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-violet-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-purple-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">3.6k students</span>
+        </div>
+      </div>
+
+      <!-- Banker -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Bank PO / Clerk" data-cat="government" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center mb-4 shadow-lg shadow-green-200 dark:shadow-green-900/40 text-2xl">🏦</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Bank PO</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">IBPS / SBI Exams</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-green-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-emerald-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">8.7k students</span>
+        </div>
+      </div>
+
+      <!-- Data Scientist -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Data Scientist / AI" data-cat="engineering" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-400 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-pink-200 dark:shadow-pink-900/40 text-2xl">🤖</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Data Scientist</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">AI / ML Career</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-pink-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-fuchsia-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">6.9k students</span>
+        </div>
+      </div>
+
+      <!-- Teacher -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Teacher (CTET / NET)" data-cat="government" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center mb-4 shadow-lg shadow-yellow-200 dark:shadow-yellow-900/40 text-2xl">📚</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Teacher</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">CTET / State TET / NET</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-yellow-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-amber-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">5.0k students</span>
+        </div>
+      </div>
+
+      <!-- Architect -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Architect (NATA)" data-cat="arts" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center mb-4 shadow-lg shadow-orange-200 dark:shadow-orange-900/40 text-2xl">🏗️</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Architect</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">NATA / B.Arch</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-orange-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-rose-500 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">2.8k students</span>
+        </div>
+      </div>
+
+      <!-- Fashion Designer -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Fashion Designer" data-cat="arts" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-400 to-pink-600 flex items-center justify-center mb-4 shadow-lg shadow-fuchsia-200 dark:shadow-fuchsia-900/40 text-2xl">👗</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Fashion Design</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">NIFT / NID Entrance</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-fuchsia-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-pink-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">3.2k students</span>
+        </div>
+      </div>
+
+      <!-- Entrepreneur -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Entrepreneur / Startup" data-cat="business" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-accent-600 flex items-center justify-center mb-4 shadow-lg shadow-brand-200 dark:shadow-brand-900/40 text-2xl">🚀</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Entrepreneur</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Startup & Business</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-brand-500 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-accent-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">4.5k students</span>
+        </div>
+      </div>
+
+      <!-- MBA -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="MBA (CAT / GMAT)" data-cat="business" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-200 dark:shadow-blue-900/40 text-2xl">🎓</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">MBA</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">CAT / GMAT / XAT</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-blue-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-indigo-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">6.0k students</span>
+        </div>
+      </div>
+
+      <!-- Pharmacist -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="Pharmacist" data-cat="medical" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-cyan-600 flex items-center justify-center mb-4 shadow-lg shadow-teal-200 dark:shadow-teal-900/40 text-2xl">💊</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">Pharmacist</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">B.Pharma / D.Pharma</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-teal-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-cyan-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">2.3k students</span>
+        </div>
+      </div>
+
+      <!-- UX Designer -->
+      <div class="goal-card glass rounded-3xl p-5 select-none" data-goal="UX / UI Designer" data-cat="arts" onclick="selectGoal(this)">
+        <div class="check-ring"><svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-brand-600 flex items-center justify-center mb-4 shadow-lg shadow-violet-200 dark:shadow-violet-900/40 text-2xl">🎨</div>
+        <h3 class="font-sora font-bold text-sm sm:text-base mb-1">UX Designer</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Design Career Path</p>
+        <div class="flex items-center gap-1.5">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-violet-400 border border-white dark:border-[#0f0e1a]"></div>
+            <div class="w-5 h-5 rounded-full bg-brand-600 border border-white dark:border-[#0f0e1a]"></div>
+          </div>
+          <span class="text-xs text-slate-400">3.9k students</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- No results state -->
+    <div id="noResults" class="hidden text-center py-16">
+      <div class="text-5xl mb-4">🔍</div>
+      <h3 class="font-sora font-bold text-lg mb-2">No goals found</h3>
+      <p class="text-slate-500 dark:text-slate-400 text-sm">Try a different search or <button onclick="clearSearch()" class="text-brand-600 dark:text-brand-300 font-medium underline">clear filters</button></p>
+    </div>
+
+    <!-- Selected Goal Preview Panel -->
+    <div id="selectedPanel" class="hidden slide-up">
+      <div class="glass bg-white/80 dark:bg-[#1a1730]/80 rounded-3xl border border-brand-200/50 dark:border-brand-700/40 p-6 sm:p-8 shadow-xl">
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+
+          <!-- Left: Selected info -->
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+              <span class="text-sm font-medium text-green-600 dark:text-green-400">Goal Selected!</span>
+            </div>
+            <h2 class="font-sora font-bold text-2xl sm:text-3xl mb-2">
+              Your Goal: <span class="gradient-text" id="selectedGoalName">—</span>
+            </h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">GoalBuddy will build your personalized AI roadmap with smart study plans, mock interviews, and 24/7 mentor support.</p>
+
+            <!-- Mini roadmap preview -->
+            <div class="space-y-3 mb-6">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Your Roadmap Preview</p>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</div>
+                <div class="flex-1 h-2 progress-track"><div class="h-2 progress-fill" style="width:100%"></div></div>
+                <span class="text-xs text-slate-500 dark:text-slate-400 w-20">Goal Set ✅</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl border-2 border-dashed border-brand-300 dark:border-brand-700 flex items-center justify-center text-xs font-bold flex-shrink-0 text-brand-500">2</div>
+                <div class="flex-1 h-2 progress-track"><div class="h-2 progress-fill" style="width:0%"></div></div>
+                <span class="text-xs text-slate-400 w-20">Profile Setup</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-xl border-2 border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center text-xs font-bold flex-shrink-0 text-slate-400">3</div>
+                <div class="flex-1 h-2 progress-track"><div class="h-2 progress-fill" style="width:0%"></div></div>
+                <span class="text-xs text-slate-400 w-20">AI Roadmap</span>
+              </div>
+            </div>
+
+            <!-- Feature chips -->
+            <div class="flex flex-wrap gap-2">
+              <span class="tag-badge px-3 py-1 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300">🤖 AI Mentor</span>
+              <span class="tag-badge px-3 py-1 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300">🗺️ Dynamic Roadmap</span>
+              <span class="tag-badge px-3 py-1 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300">🎙️ Mock Interviews</span>
+              <span class="tag-badge px-3 py-1 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300">👨‍👩‍👧 Parent Dashboard</span>
+            </div>
+          </div>
+
+          <!-- Right: CTA + stats -->
+          <div class="w-full lg:w-72 flex-shrink-0">
+            <div class="rounded-2xl bg-gradient-to-br from-brand-50 to-accent-50 dark:from-brand-900/30 dark:to-accent-900/30 border border-brand-100 dark:border-brand-800/40 p-5 mb-4">
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">What you'll get</p>
+              <ul class="space-y-2.5">
+                <li class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Personalized study schedule
+                </li>
+                <li class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Weakness analysis & fix plan
+                </li>
+                <li class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  AI mock interview sessions
+                </li>
+                <li class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Parent progress reports
+                </li>
+                <li class="flex items-center gap-2 text-sm">
+                  <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  24/7 AI mentor chatbot
+                </li>
+              </ul>
+            </div>
+
+            <!-- Float badge -->
+            <div class="float-badge flex items-center gap-2 mb-4 px-4 py-2.5 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40">
+              <span class="text-xl">🆓</span>
+              <div>
+                <p class="text-xs font-bold text-green-700 dark:text-green-400">Start 100% Free</p>
+                <p class="text-xs text-green-600 dark:text-green-500">No credit card needed</p>
+              </div>
+            </div>
+
+            <a href="{% url 'signup' %}" class="btn-primary w-full text-white font-semibold py-3.5 rounded-2xl inline-flex items-center justify-center gap-2 text-sm">
+              Continue to Profile Setup
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+            <button onclick="clearSelection()" class="mt-3 w-full text-center text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+              ← Change Goal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="bg-[#0f0e1a] text-slate-400 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg btn-primary flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <span class="font-sora font-bold text-white">GoalBuddy</span>
+    </div>
+    <p class="text-sm">© 2024 GoalBuddy. Made with ❤️ in India.</p>
+    <div class="flex gap-4 text-sm">
+      <a href="#" class="hover:text-white transition-colors">Privacy</a>
+      <a href="#" class="hover:text-white transition-colors">Terms</a>
+      <a href="{% url 'home' %}" class="hover:text-white transition-colors">Home</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ── Dark mode ──
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function applyTheme(dark) {
+    dark ? html.classList.add('dark') : html.classList.remove('dark');
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) applyTheme(true);
+  else applyTheme(false);
+  themeToggle.addEventListener('click', () => applyTheme(!html.classList.contains('dark')));
+
+  // ── Goal Selection ──
+  let selectedCard = null;
+
+  function selectGoal(card) {
+    if (selectedCard) selectedCard.classList.remove('selected');
+    card.classList.add('selected');
+    selectedCard = card;
+    const goalName = card.getAttribute('data-goal');
+    document.getElementById('selectedGoalName').textContent = goalName;
+    const panel = document.getElementById('selectedPanel');
+    panel.classList.remove('hidden');
+    panel.classList.add('slide-up');
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+
+  function clearSelection() {
+    if (selectedCard) selectedCard.classList.remove('selected');
+    selectedCard = null;
+    document.getElementById('selectedPanel').classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Search ──
+  const searchInput = document.getElementById('goalSearch');
+  searchInput.addEventListener('input', filterGoals);
+
+  function filterGoals() {
+    const query = searchInput.value.toLowerCase();
+    const activeCat = document.querySelector('.cat-pill.active')?.dataset.cat || 'all';
+    const cards = document.querySelectorAll('#goalGrid .goal-card');
+    let visible = 0;
+    cards.forEach(card => {
+      const name = card.getAttribute('data-goal').toLowerCase();
+      const cat = card.getAttribute('data-cat');
+      const matchesSearch = name.includes(query);
+      const matchesCat = activeCat === 'all' || cat === activeCat;
+      if (matchesSearch && matchesCat) { card.style.display = ''; visible++; }
+      else card.style.display = 'none';
+    });
+    document.getElementById('visibleCount').textContent = visible;
+    document.getElementById('noResults').classList.toggle('hidden', visible > 0);
+  }
+
+  function clearSearch() {
+    searchInput.value = '';
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-cat="all"]').classList.add('active');
+    filterGoals();
+  }
+
+  // ── Category filter ──
+  document.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      filterGoals();
+    });
+  });
+</script>
+</body>
+</html>

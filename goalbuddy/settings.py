@@ -39,6 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     "home.apps.HomeConfig",
+    "accounts.apps.AccountsConfig",
+    "dashboard.apps.DashboardConfig",
+    "interview.apps.InterviewConfig",
+    "goal.apps.GoalConfig",
 ]
 
 MIDDLEWARE = [

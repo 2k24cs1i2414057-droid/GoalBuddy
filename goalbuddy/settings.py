@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     "goal.apps.GoalConfig",
 ]
 
+
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

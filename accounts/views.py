@@ -3,6 +3,20 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from goal.models import Student
+#from google import genai
+#import os
+#client = genai.Client(api_key="AIzaSyAF1CyoILkZaNWgEKEe_kucOKRDpe9V3Bg")
+
+
+# from dotenv import load_dotenv
+# import json
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# load_dotenv()
+
+#genai.configure(api_key="AIzaSyAF1CyoILkZaNWgEKEe_kucOKRDpe9V3Bg")
+# model = genai.GenerativeModel("gemini-1.0-pro")
+
 
 
 # def login(request):
@@ -74,4 +88,40 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('login') 
+
+
+# def generate_from_gemini(request):
+#     client =genai.Client()  
+
+#     if request.method == "POST":
+#         query = request.POST.get("query")
+        
+#         prompt ="You are Goalboddy AI and your task is  "+ query
+
+#     response = client.models.generate_content(
+
+#         model = "gemini-2.5-flash",
+#         contents = prompt
+#     )
+
+
+#     print(response.text)
+
+# @csrf_exempt
+# def chat(request):
+#     if request.method == "POST":
+#         try:
+#             body = json.loads(request.body)
+#             user_message = body.get("message", "")
+
+#             response = model.generate_content(f"""
+# You are an AI exam assistant.
+
+# User: {user_message}
+# """)
+
+#             return JsonResponse({"reply": response.text})
+
+#         except Exception as e:
+#             return JsonResponse({"reply": "⚠️ " + str(e)})

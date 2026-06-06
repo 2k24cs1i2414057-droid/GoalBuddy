@@ -5,5 +5,6 @@ urlpatterns=[
     path("dashboard/",views.dashboard,name="dashboard"),
     path("progress/",views.progress,name="progress"),
     path("roadmap/",views.roadmap,name="roadmap"),
-    path("aichat/",views.aichat,name="aichat"),
+    path("aichat/",views.aichat,name="aichat"), 
+    #path("apichat/",views.chat_api , name="chatapi")
 ]

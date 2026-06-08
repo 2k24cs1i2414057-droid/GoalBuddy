@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from goal.models import Student
+from accounts.models import Student
 #from google import genai
 #import os
 #client = genai.Client(api_key="AIzaSyAF1CyoILkZaNWgEKEe_kucOKRDpe9V3Bg")
 
 
 # from dotenv import load_dotenv
-# import json
+# import json  
 # from django.http import JsonResponse
 # from django.views.decorators.csrf import csrf_exempt
 # load_dotenv()

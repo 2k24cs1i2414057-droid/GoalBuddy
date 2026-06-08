@@ -567,10 +567,16 @@
               </div>
             </div>
 
-            <a href="{% url 'signup' %}" class="btn-primary w-full text-white font-semibold py-3.5 rounded-2xl inline-flex items-center justify-center gap-2 text-sm">
-              Continue to Profile Setup
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-            </a>
+            <form method="POST" action="{% url 'goal' %}">
+    {% csrf_token %}
+
+    <input type="hidden" name="goal" id="selectedGoalInput">
+
+    <button type="submit"
+        class="btn-primary w-full text-white font-semibold py-3.5 rounded-2xl inline-flex items-center justify-center gap-2 text-sm">
+        Create My Roadmap
+    </button>
+</form>
             <button onclick="clearSelection()" class="mt-3 w-full text-center text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
               ← Change Goal
             </button>
@@ -603,6 +609,7 @@
 <script>
   // ── Dark mode ──
   const themeToggle = document.getElementById('themeToggle');
+  
   const html = document.documentElement;
   function applyTheme(dark) {
     dark ? html.classList.add('dark') : html.classList.remove('dark');
@@ -622,6 +629,7 @@
     selectedCard = card;
     const goalName = card.getAttribute('data-goal');
     document.getElementById('selectedGoalName').textContent = goalName;
+    document.getElementById('selectedGoalInput').value = goalName;
     const panel = document.getElementById('selectedPanel');
     panel.classList.remove('hidden');
     panel.classList.add('slide-up');
